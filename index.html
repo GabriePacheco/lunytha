@@ -13,23 +13,132 @@
     </head>
 
     <body>
+       <nav class="nav-extended #ff80ab pink accent-1">
+            <div class="nav-wrapper">
+              <a href="#" class="brand-logo">Lunytha</a>
+              <a href="#" data-target="mobile-demo" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+              <ul id="nav-mobile" class="right hide-on-med-and-down">
+                <li><a href="sass.html">Sass</a></li>
+                <li><a href="badges.html">Components</a></li>
+                <li><a href="collapsible.html">JavaScript</a></li>
+              </ul>
+            </div>
+            <div class="nav-content">
+              <ul class="tabs tabs-transparent">
+                <li class="tab"><a href="#test1"><i class="material-icons">camera_alt</i></a></li>
+                <li class="tab"><a class="active" href="#test2"><i class="material-icons">public</i></a></li>
+                 <li class="tab"><a href="#test4"><i class="material-icons">message</i></a></li> 
+                <li class="tab"><a href="#test4"><i class="material-icons">history</i></a></li>
+              </ul>
+            </div>
+          </nav>
 
-		<div class="valign-wrapper ">
-			<h2> &nbsp; </h2>
-			  <div class="preloader-wrapper big active ">
-			    <div class="spinner-layer spinner-blue-only">
-			      <div class="circle-clipper left">
-			        <div class="circle"></div>
-			      </div><div class="gap-patch">
-			        <div class="circle"></div>
-			      </div><div class="circle-clipper right">
-			        <div class="circle"></div>
-			      </div>
-			    </div>
-			  </div>
+          <ul class="sidenav" id="mobile-demo">
+            <li><a href="#home"><i class="material-icons">public</i>Inico</a></li>
+            <li><a href="#cuenta"><i class="material-icons">account_circle</i>Cuenta</a></li>
+            <li><a href="#config"><i class="material-icons">settings</i>Configuración</a></li>
+          </ul>
 
-		</div>
-   
+        <div id = "app"> <!-- contenedor de la app -->
+          <div id = "login" class="container center-align appPagina hide ">
+            <h4>Bienvenido al asitente de tareas</h4>
+            <p>Elije una opción para ingresar.</p>
+              <!-- Formulario registro -->
+            <div class="row">
+                <form  id = "login" class="col s12">
+                  <div class="row">
+                    <div class="input-field col s12">
+                      <input id="email_login" type="email" class="validate" required>
+                      <label for="email_login">Email</label>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="input-field col s12">
+                      <input id="password_login" type="password" class="validate" required>
+                      <label for="password_login">Password</label>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="input-field col s12">
+                     <button class="btn waves-effect waves-light #ff80ab pink accent-1" type="submit" name="action">Entrar
+                        <i class="material-icons right">send</i>
+                      </button>
+                                          
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col s6 left-align"><a href="#recuperar" >Olvidé mí contraeña</a></div>
+                    <div class="col s6 rigth-align"><a  class="rigth-align" href="#registro" >Resestrame</a></div>
+                  </div>
+                 </form><!-- fin formulario de registro -->
+            </div>              
+          </div><!-- fin Login -->
+          <!-- Pagina de CUENTA>-->
+          <div id="cuenta" class="container appPagina hide">
+            <div class="row">
+              <form id = "perfil"> 
+                <div id="foto" class="center-align col s6 offset-s3"></div>
+                <div class="right-align col s12" >
+                   <input type="file" id="photoURL" accept="image/*" class="hide">
+                   <input type="hidden" name="userId" id ="userId" >
+                  <div id = "addPhotoPerfil" class="btn-floating btn-small waves-effect waves-light #ff80ab pink accent-1 "><i class="material-icons">add_a_photo</i></div>
+                </div>
+               
+                  <div class="row">
+                    <div class="input-field col s12">
+                      <strong><i class="material-icons">extension</i> Función del usuario</strong>
+                          <div class="switch">
+                            <label>
+                              Soy Estudiate
+                              <input type="checkbox" id="rol" >
+                              <span class="lever #ff80ab pink accent-1"></span>
+                              Soy Padre de Familia 
+                            </label>
+                          </div>                   
+                      </div>  
+
+
+
+                      <div class="input-field col s12">
+                        <i class="material-icons prefix"> fingerprint</i>
+                        <input id="nombre_perfil"  name ="nombre_perfil" type="text" class="validate" required placeholder="Nombre y Apellido">
+                        <label for="nombre_perfil">Nombre</label>
+                      </div> 
+
+  
+
+                      <div class="input-field col s12 padre hide">
+                        <i class="material-icons prefix">phone</i>
+                        <input id="telefono"  name ="telefono" type="tel" class="validate"  placeholder="Telefono de contacto">
+                        <label for="telefono">Telefono</label>
+                      </div>     
+                      <div class="input-field col s12 padre hide">
+                        <i class="material-icons prefix">face</i>
+                        <input id="estudiante"  name ="estudiante" type="tel" class="validate"  placeholder="El estuante al que represento">
+                        <label for="estudiante">Representado</label>
+                      </div>           
+                    
+                  </div>
+                  <div class="col s12 center-align ">
+                      <button type="submit" class="btn waves-effect waves-light #ff80ab pink accent-1">Guardar</button>
+                  </div>
+                </form>
+            </div>
+          </div><!-- fin pagina de cuenta -->
+
+
+
+
+        </div><!-- fin Appcontenedora -->
+
+ 
+
+
+
+
+
        
         
         <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase-app.js"></script>
@@ -38,7 +147,7 @@
         <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase-firestore.js"></script>
         <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase-messaging.js"></script>
         <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase-functions.js"></script>    
-        
+        <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase-storage.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
         <script type="text/javascript" src="js/cookie.js"></script> 
         <script type="text/javascript" src="js/materialize.min.js"></script>
