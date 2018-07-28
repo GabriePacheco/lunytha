@@ -3,17 +3,22 @@
     <head>
       <!--Import Google Icon Font-->
       <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Advent+Pro" rel="stylesheet">
       <!--Import materialize.css-->
       <link type="text/css" rel="stylesheet" href="css/materialize.min.css"  media="screen,projection"/>
-
+         <link type="text/css" rel="stylesheet" href="materialize-social.css" />
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+        <link href="css/style.css" type="text/css" rel="stylesheet" media="screen,projection" />
       <!--Let browser know website is optimized for mobile-->
-       <meta charset="utf-8">
+      <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+   
 
     </head>
 
     <body>
-       <nav class="nav-extended #ff80ab pink accent-1">
+      <div id = "nav">
+       <nav class="nav-extended #ff80ab pink accent-2">
             <div class="nav-wrapper">
               <a href="#" class="brand-logo">Lunytha</a>
               <a href="#" data-target="mobile-demo" class="sidenav-trigger"><i class="material-icons">menu</i></a>
@@ -24,7 +29,7 @@
               </ul>
             </div>
             <div class="nav-content">
-              <ul class="tabs tabs-transparent">
+              <ul class="tabs tabs-transparent #ff80ab pink accent-1">
                 <li class="tab"><a href="#test1"><i class="material-icons">camera_alt</i></a></li>
                 <li class="tab"><a class="active" href="#test2"><i class="material-icons">public</i></a></li>
                  <li class="tab"><a href="#test4"><i class="material-icons">message</i></a></li> 
@@ -32,49 +37,133 @@
               </ul>
             </div>
           </nav>
+         </div> 
 
           <ul class="sidenav" id="mobile-demo">
             <li><a href="#home"><i class="material-icons">public</i>Inico</a></li>
             <li><a href="#cuenta"><i class="material-icons">account_circle</i>Cuenta</a></li>
             <li><a href="#config"><i class="material-icons">settings</i>Configuración</a></li>
+            <li><a id="cerrar"><i class="material-icons">clear</i>Cerrar sesión</a></li>
           </ul>
 
         <div id = "app"> <!-- contenedor de la app -->
+
+          <!-- Pagina Login  -->
           <div id = "login" class="container center-align appPagina hide ">
-            <h4>Bienvenido al asitente de tareas</h4>
-            <p>Elije una opción para ingresar.</p>
+            <div class="row"> 
+              <div class="coll s6 offset-2">
+                
+                <h2 ><strong class="pink-text accent-2-text"><b>Lunytha</b></strong></h2>
+                
+              </div>
+          
+            </div>
               <!-- Formulario registro -->
             <div class="row">
                 <form  id = "login" class="col s12">
+                   Elije una opción para ingresar.
                   <div class="row">
                     <div class="input-field col s12">
                       <input id="email_login" type="email" class="validate" required>
                       <label for="email_login">Email</label>
                     </div>
-                  </div>
-
-                  <div class="row">
+                
                     <div class="input-field col s12">
                       <input id="password_login" type="password" class="validate" required>
                       <label for="password_login">Password</label>
                     </div>
+            
+                    <div class="input-field col s12">
+                      <button class="boton-login" href="login"><h6>Iniciar sesión</h6></button>          
+                                          
+                    </div>
+
+                    <div class="col s12 center-aling">¿Olvidaste tu contraseña? <a href="#recuperar" >Recuperala aquí</a></div>
+                   
                   </div>
+                  <div class="row">
+                     <div class="col s5" ><hr> </div>
+                     <div class="col s2" ><strong>O</strong></div>
+                     <div class="col s5" ><hr> </div>
+                  </div>
+
+  
+
+  
+                 </form>
+
+                 <!-- fin formulario de registro -->
+                  <div class="row">
+                    <button id ="loginConFacebook" class="waves-effect waves-light btn col s12 social facebook">
+                    <i class="fa fa-facebook"></i> Inicia sesión con Facebook</button>
+                  </div>
+                  <div class="row">
+                    <div class="col s12 center-aling">Aún no tienes Cunta   <a href="#registro" >Registrate aquí</a></div>
+                  </div>
+            </div>              
+          </div><!-- fin Login -->
+
+          <!-- pagina Registro -->
+
+          <div id = "registro" class="container center-align appPagina hide ">
+            <div class="row"> 
+              <div class="coll s6 offset-2">
+                
+                <h2 ><strong class="pink-text accent-2-text"><b>Lunytha</b></strong></h2>
+                  Elije una opción para ingresar.
+              </div>
+          
+            </div>
+
+              <!-- Formulario registro -->
+            <div class="row">
+                  
+                <form  id = "registrar" class="col s12">
+                 
+
 
                   <div class="row">
                     <div class="input-field col s12">
-                     <button class="btn waves-effect waves-light #ff80ab pink accent-1" type="submit" name="action">Entrar
-                        <i class="material-icons right">send</i>
-                      </button>
-                                          
+                      <input id="email_registro" type="email" class="validate" required>
+                      <label for="email_registro">Email</label>
                     </div>
+                
+                    <div class="input-field col s12">
+                      <input id="password_registro" type="password" class="validate" required>
+                      <label for="password_registro">Password</label>
+                    </div>
+                    <div class="input-field col s12">
+                      <input id="password_registro2" type="password" class="validate" required>
+                      <label for="password_registro2">Password</label>
+                    </div>
+            
+                    <div class="input-field col s12">
+                      <button class="boton-login" href="registro"><h6>Registrarse</h6></button>      
+                    </div>               
                   </div>
                   <div class="row">
-                    <div class="col s6 left-align"><a href="#recuperar" >Olvidé mí contraeña</a></div>
-                    <div class="col s6 rigth-align"><a  class="rigth-align" href="#registro" >Resestrame</a></div>
+                     <div class="col s5" ><hr> </div>
+                     <div class="col s2" ><strong>O</strong></div>
+                     <div class="col s5" ><hr> </div>
                   </div>
-                 </form><!-- fin formulario de registro -->
+                 </form>
+
+                 <!-- fin formulario de registro -->
+                <div class="row">
+                    <button id ="RegistrarConFacebook" class="waves-effect waves-light btn col s12 social facebook">
+                    <i class="fa fa-facebook"></i> Registrate con Facebook</button>
+              </div>
+                <div class="row">
+                    <div class="col s12 center-aling">¿Ya tines cuenta ?<a href="#login" >Ingresa aquí</a></div>
+                  </div>
+  
+                 
             </div>              
-          </div><!-- fin Login -->
+          </div><!-- fin Login --><!--Fin Registro-->
+
+
+
+
           <!-- Pagina de CUENTA>-->
           <div id="cuenta" class="container appPagina hide">
             <div class="row">
@@ -104,6 +193,7 @@
                       <div class="input-field col s12">
                         <i class="material-icons prefix"> fingerprint</i>
                         <input id="nombre_perfil"  name ="nombre_perfil" type="text" class="validate" required placeholder="Nombre y Apellido">
+                        <input type="hidden" id ="email_perfil">
                         <label for="nombre_perfil">Nombre</label>
                       </div> 
 
@@ -116,8 +206,8 @@
                       </div>     
                       <div class="input-field col s12 padre hide">
                         <i class="material-icons prefix">face</i>
-                        <input id="estudiante"  name ="estudiante" type="tel" class="validate"  placeholder="El estuante al que represento">
-                        <label for="estudiante">Representado</label>
+                        <input id="estudiante"  name ="estudiante" type="tel" class="validate"  placeholder="El nombre completo estuante al que represento">
+                        <label for="estudiante">Representado </label>
                       </div>           
                     
                   </div>
@@ -127,10 +217,6 @@
                 </form>
             </div>
           </div><!-- fin pagina de cuenta -->
-
-
-
-
         </div><!-- fin Appcontenedora -->
 
  
