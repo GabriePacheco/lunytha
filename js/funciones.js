@@ -214,7 +214,6 @@ $("#login").submit(function (){
 		if (error.code == "auth/wrong-password"){
 			M.toast({html: '<span>La contraseña ingresada no es correcta <i class="material-icons red-text">error</i></span> '});
 		}
-		console.log(error.code);
 
 
 	});
@@ -237,12 +236,17 @@ $("#loginConFacebook").click(function (){
 	  var email = error.email;
 	 
 	  var credential = error.credential;
+	  M.toast({html: error.message + ' <i class="material-icons red-text">error</i></span> '});
 	 
 	});
 });
 
 $("#RegistrarConFacebook").click(function (){
 		var provider = new firebase.auth.FacebookAuthProvider();
+		provider.setCustomParameters({
+		  'display': 'popup'
+		});
+
 		firebase.auth().signInWithPopup(provider).then(function(result) {
 	  	var token = result.credential.accessToken;
 	    var user = result.user;
