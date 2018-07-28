@@ -62,24 +62,7 @@ $(document).ready(function(){
  });
 
 
-$("#login").submit(function (){
 
-	Auth.signInWithEmailAndPassword($('#email_login').val(), $('#password_login').val())
-	.catch(function (error){
-		
-
-		if (error.code == "auth/user-not-found"){
-			M.toast({html: '<span>El Email ingresado no es correcto <i class="material-icons red-text">error</i></span> ' });
-		}
-
-		if (error.code == "auth/wrong-password"){
-			M.toast({html: '<span>La contraseña ingresada no es correcta <i class="material-icons red-text">error</i></span> '});
-		}
-
-
-	});
-	return false;
-});
 
 
 //Funcion que controla la navegacion de l apagina
@@ -112,6 +95,8 @@ $(document).scroll(function (){
 
 ///Carga el perdol de usuario 
 function getPerfil(usuario){
+	
+	
 	$("#userId").val(usuario.uid);
   	$("#email_perfil").val(usuario.email);
 	$("#nombre_perfil").val(usuario.displayName);
@@ -124,11 +109,17 @@ function getPerfil(usuario){
 	if (usuario.phoneNumber != null){
 		$("#telefono").val()=usuario.phoneNumber ;
 	}
-	var starCountRef = firebase.database().ref().child();
-	starCountRef.on('value', function(snapshot) {
-	  console.log(snapshot.val());
+	var userId = firebase.auth().currentUser.uid;
+	return firebase.database().ref('/users/' + userId).once('value').then(function(snapshot) {
+	  var rol = (snapshot.val() && snapshot.val().rol) || 'Anonymous';
+	 	if(rol== "representante"){
+			$(".padre").removeClass("hide");
+			$("#telefono").attr("required", true);
+			$("#estudiante").attr("required", true);
+			$("#estudiante").val( snapshot.val().estudiante);
+			$("#telefono").val( snapshot.val().telefono);
+		 }
 	});
-		
 
 }	
 
@@ -144,7 +135,7 @@ $("#photoURL").change(function (e){
 	if (file){
 		var src = URL.createObjectURL(file);
 	
-	$("#foto").html("<h1><img src='"+src+"' class=' circle' width='150em' height='150em' /></h1>");
+	$("#foto").html("<h1><img src='"+src+"' class='responsive-img circle' /></h1>");
 	}
 
 
@@ -154,41 +145,47 @@ $("#photoURL").change(function (e){
 $("#perfil").submit(function(){
 	var fichero = document.getElementById("photoURL");
 	var imagenAsubir = fichero.files[0];
+	var perfil = {};
+
 	if (imagenAsubir){
 		storage.ref().child("imagenes/userPhoto/" + $("#userId").val()).put(imagenAsubir)
 		.then(function (snap){
 				var urlImage = snap.downloadURL;
+				perfil.imagen = urlImage;
 				Auth.currentUser.updateProfile({
 					photoURL: urlImage
 				});
 		});
 	}
 
-	if ($("#rol").prop('checked') ) {
-		base.ref("user_config/ " + $("#userId").val()).set({
-			rol: 'representante',
-			permisos: 1,
-			mail: $("#email_perfil").val(),
-			estudiante: $("#estudiante").val()
-		});
+	perfil.nombre = $("#nombre_perfil").val();
+	perfil.email = $("#email_perfil").val();
+	if ($("#rol").prop("checked")){
+		perfil.rol = "representante";
+		perfil.permisos=2;
+		perfil.telefono = $("#telefono").val();
+		perfil.estudiante = $("#estudiante").val();
 
-		Auth.currentUser.updateProfile({
-			phoneNumber: $("#telefono").val(),
-		
-		})
 
+	}else{
+		perfil.rol = "estudiante";
+		perfil.telefono= null;
+		perfil.permisos=null;
+		perfil.estudiante = null
 
 	}
-
-	Auth.currentUser.updateProfile({
-		displayName: $("#nombre_perfil").val(),
 	
-	})
-	.then(function (e){
-		M.toast({html: '<span>Tus datos se guardaron! <i class="material-icons green-text">done_outline</i></span>', classes: 'rounded'})
-	});
+	Auth.currentUser.updateProfile({
+		displayName: perfil.nombre,
+		phoneNumber: perfil.telefono
+	}).then(function(){
+		M.toast({html: '<span>Tus datos se actualizaron! <i class="material-icons green-text">check_circle</i></span> '});
+	}) 
 
-	return false 	
+	var guardar = {};
+	guardar["users/" + $("#userId").val()]=perfil; 
+	firebase.database().ref().update(guardar);
+	return false;
 });
 
 //Cambiar el rol de usuario 
@@ -202,6 +199,26 @@ $("#rol").change(function (){
     	$("#telefono").removeAttr("required");
 		$("#estudiante").removeAttr("required");
 	}
+});
+
+///Inicio de Sesión con formulario
+
+$("#login").submit(function (){
+	Auth.signInWithEmailAndPassword($('#email_login').val(), $('#password_login').val())
+	.catch(function (error){
+	
+		if (error.code == "auth/user-not-found"){
+			M.toast({html: '<span>El Email ingresado no es correcto <i class="material-icons red-text">error</i></span> ' });
+		}
+
+		if (error.code == "auth/wrong-password"){
+			M.toast({html: '<span>La contraseña ingresada no es correcta <i class="material-icons red-text">error</i></span> '});
+		}
+		console.log(error.code);
+
+
+	});
+	return false;
 });
 ///////***INICIO CON FACEBOOK
 
