@@ -75,7 +75,9 @@ $("a").click(function (){
 		$(".sidenav").sidenav("close");
 
 	}
-	navegacion($(this).attr("href"));
+	if ($(this).attr("data-aciones")!="true"){
+		navegacion($(this).attr("href"));
+	}
 });
 
 /**Funcion que fija la barra de navegación cuando baja el**/
@@ -119,9 +121,23 @@ function getPerfil(usuario){
 			$("#estudiante").val( snapshot.val().estudiante);
 			$("#telefono").val( snapshot.val().telefono);
 		 }
+		
+		if (snapshot.val().permisos >= 3){
+				$("#doAcciones").removeClass("hide");
+      			$('.modal').modal();
+      			$("#postImage").attr("src",usuario.photoURL );
+   				$("#postCip").append(usuario.displayName);
+   				$("#rol").parent().addClass('hide')
+   				$("#soy").val(snapshot.val().rol);
+   				$("#soy").attr("data-scopes", snapshot.val().permisos);
+		
+		} 
+
 	});
 
 }	
+
+
 
 //botón agregar foto de perfil
 $("#addPhotoPerfil").click(function (){
@@ -151,15 +167,17 @@ $("#perfil").submit(function(){
 		storage.ref().child("imagenes/userPhoto/" + $("#userId").val()).put(imagenAsubir)
 		.then(function (snap){
 				var urlImage = snap.downloadURL;
-				perfil.imagen = urlImage;
+				perfil.imagen = snap.downloadURL;
+				
 				Auth.currentUser.updateProfile({
 					photoURL: urlImage
 				});
 		});
 	}
-
+		
 	perfil.nombre = $("#nombre_perfil").val();
 	perfil.email = $("#email_perfil").val();
+	
 	if ($("#rol").prop("checked")){
 		perfil.rol = "representante";
 		perfil.permisos=2;
@@ -168,10 +186,11 @@ $("#perfil").submit(function(){
 
 
 	}else{
-		perfil.rol = "estudiante";
+		
+		perfil.rol = $("#soy").val();
 		perfil.telefono= null;
-		perfil.permisos=null;
 		perfil.estudiante = null
+		perfil.permisos= $("#soy").attr("data-scopes");
 
 	}
 	
@@ -260,6 +279,75 @@ $("#RegistrarConFacebook").click(function (){
 	  var email = error.email;
 	 
 	  var credential = error.credential;
+	    M.toast({html: error.message + ' <i class="material-icons red-text">error</i></span> '});
 	 
 	});
 });
+
+
+//**********ENVIAR PUBLICACION******************//
+$("#postSend").click(function (){
+
+	if ($("#postText").val() != ""){
+		var nPostId = base.ref().child('posts').push().key;
+		var postData = {
+   			uid: $("#userId").val(),
+		    texto: $("#postText").val(),
+		    starCount: 0
+		  }; 
+ 		var updates = {};
+		  updates['/posts/' + nPostId] = postData;
+		  $("#postText").val("");
+	     return firebase.database().ref().update(updates);
+	}
+
+
+});
+
+
+//*** Cargar posts
+
+var publicaciones = firebase.database().ref('posts/');
+publicaciones.on('child_added', function(data) {
+
+	publicar(data);
+});
+
+function publicar(post){
+	var id = post.val().uid;
+	var publicacion = {};
+	publicacion.id = post.key;
+	publicacion.texto =post.val().texto;
+	firebase.database().ref('/users/' + id).once('value').then(function(snapshot) {
+		publicacion.username = snapshot.val().nombre;
+		publicacion.photoUrl = snapshot.val().imagen;
+		
+		$("#publicaciones").prepend(`
+		  <div class="card ">
+		  		<div class="row">
+					<div class="col s2 avatar">
+						<img src="${publicacion.photoUrl}" alt="${publicacion.username}" class="responsive-img circle">
+					</div>
+					<div class="col s8 ">
+						<b>${publicacion.username} </b>
+						<br> <small><span class="chip white">dd/mm/aaaa</span></small>
+
+
+					</div>
+		  		</div>    			
+	        <div class="card-content">
+
+	          
+	          <p>${publicacion.texto}</p>
+	        </div>
+	        <div class="card-action">
+	          <a href="#">This is a link</a>
+	          <a href="#">This is a link</a>
+	        </div>
+	      </div>
+		`)	;
+ 	});
+
+	
+
+}
