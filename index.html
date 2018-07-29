@@ -230,17 +230,20 @@
             
           </div>
               <textarea id ="postText" placeholder="¿Que quieres informar?"></textarea>
-                <div id="postFotos">&nbsp;</div>
-                <div id ="postAdjuntos"></div>           
+                <div id="postFotos" class="row"></div>
+                <input type="file" id="postImagen" class="hide" accept="images/*">
+                <div id ="postAdjuntos" class="row"></div>           
+                 <input type="file" id="postAcrivos" class="hide">
                 <div class="row">
-s                 <div class="col s2"><i class="material-icons #880e4f pink-text darken-4  ">add_photo_alternate</i></div>
-                  <div class="col s2"><i class="material-icons  green-text ">attach_file</i></div>
-                  <div class="col s2"><i class="material-icons  blue-text">color_lens</i></div>
+                 <div class="col s2" id = "postUpImagen"><i class="material-icons #880e4f pink-text darken-4  ">add_photo_alternate</i></div>
+                  <div class="col s2" id = "postUpArchivo"><i class="material-icons  green-text ">attach_file</i></div>
+                  <div class="col s2" id = "postColor"><i class="material-icons  blue-text">color_lens</i></div>
+                  <div class="right-align"> 
+                  <a id = "postSend" href="#" class="modal-close waves-effect waves-green btn-flat disable" data-aciones="true" >Publicar <i class="material-icons">send</i></a>
+                 </div> 
                 </div>
               
-             <div class="right-align"> 
-              <a id = "postSend" href="#" class="modal-close waves-effect waves-green btn-flat disable" data-aciones="true" >Publicar <i class="material-icons">send</i></a>
-             </div> 
+
           </div>
      
         </div>
@@ -252,15 +255,6 @@ s                 <div class="col s2"><i class="material-icons #880e4f pink-text
          </div> <!--Fin del home -->
   
         </div><!-- fin Appcontenedora -->
-
-
-
-     
-
-
-
-
-       
         
         <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase-app.js"></script>
         <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase-auth.js"></script>

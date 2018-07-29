@@ -151,7 +151,7 @@ $("#photoURL").change(function (e){
 	if (file){
 		var src = URL.createObjectURL(file);
 	
-	$("#foto").html("<h1><img src='"+src+"' class='responsive-img circle' /></h1>");
+		$("#foto").html("<h1><img src='"+src+"' class='responsive-img circle' /></h1>");
 	}
 
 
@@ -287,19 +287,40 @@ $("#RegistrarConFacebook").click(function (){
 
 //**********ENVIAR PUBLICACION******************//
 $("#postSend").click(function (){
-
-	if ($("#postText").val() != ""){
-		var nPostId = base.ref().child('posts').push().key;
-		var postData = {
+	var postData = {
    			uid: $("#userId").val(),
 		    texto: $("#postText").val(),
 		    starCount: 0
-		  }; 
+	};
+	
+
+	if (adjuntos.contPics > 0){
+		postData.totalImagenes = adjuntos.contPics;
+		postData.urlsImagenes = "";
+		for (var i =0; i < adjuntos.pics.length;i++){
+			var img = adjuntos.pics[i];
+			storage.ref().child("imagenes/post/" + img.name).put(img)
+			.then(function (imagenSubida){
+				postData.urlsImagenes += imagenSubida.downloadURL;
+			})
+
+			.catch(function (e){
+				 M.toast({html: e.message + ' <i class="material-icons red-text">error</i></span> '});
+			});
+
+		}
+	}
+
+	if ($("#postText").val() != ""){
+		var nPostId = base.ref().child('posts').push().key;
+		 
  		var updates = {};
 		  updates['/posts/' + nPostId] = postData;
 		  $("#postText").val("");
 	     return firebase.database().ref().update(updates);
 	}
+
+
 
 
 });
@@ -351,3 +372,66 @@ function publicar(post){
 	
 
 }
+
+
+/*** BOTONES  PARA POSTEAR  **/
+//adjuntar imagenes 
+
+var adjuntos = {}
+ adjuntos.contPics = 0;
+ adjuntos.Contfil = 0;
+ adjuntos.pics=[];
+ adjuntos.fil=[];
+$("#postUpImagen").click(function (){
+	$("#postImagen").click();
+});
+$("#postImagen").change(function (e){
+	var archivos = e
+		var pic = archivos.target.files[0] ;
+		var src = URL.createObjectURL(pic)
+		if (pic){
+			$("#postFotos").append(`
+			<div class="col s3" ><img class="responsive-img" src="${src}" > </div>`); 
+			adjuntos.pics[adjuntos.contPics]=pic;
+			adjuntos.contPics+=1;
+		}
+	
+});
+
+
+$("#postUpArchivo").click(function (){
+	$("#postAcrivos").click();
+});
+$("#postAcrivos").change(function (e){
+	var archivos = e
+		var add = archivos.target.files[0] ;
+		var src = URL.createObjectURL(add)
+		if (add){
+			$("#postAdjuntos").append(`
+			<div class="col s4" ><i class="material-icons green-text">insert_drive_file</i> ${add.name} </div>`); 
+			adjuntos.fil=add;
+			adjuntos.Contfil+=1;
+		}
+		console.log(adjuntos);
+	
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
