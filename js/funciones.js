@@ -1,4 +1,28 @@
-// Initialize Firebase
+/*********** Lunyta App *****************/
+//1. Inicializando firebase/
+//1.1 Escuchador de cambio en la sesión 
+//1.- Initialize Firebase
+//2. Cerrar sesión
+//3. Registrar con Email Botón 
+//4. IniciarCodigos  Materialize
+//5.- Función que controla la navegación de la APP
+//5.1.- Cierra la barra de menú
+//6.- Ffija la barra de navegación cuando baja el scrol
+//7.-  Carga el perfil de usuario en menu PERFIL Y PARA LA APP
+//7.1.-  Botón agregar foto de perfil
+//7.2.- Escuchamos el cambio de la imagen 
+//7.3 .- Guardamos el perfil
+//7.4 Cambiar el rol de usuario 
+//8.- Inicio de Sesión con formulario
+//9.-  Login con facebook
+// 9.1 Registro con facebook
+//10.- Enviar post s
+// 10.1.- Botones del post s
+//10.1.a.-Boton  Adjuntar imagen 
+//11 carga post en la pagina principal 
+
+
+//1. Inicializando firebase/
 var config = {
 	apiKey: "AIzaSyB68t5GkQtcZIfh9Uoy8SsmWspQ2dstiN4",
 	authDomain: "lunytha-1.firebaseapp.com",
@@ -11,9 +35,7 @@ firebase.initializeApp(config);
 var  Auth = firebase.auth();
 var base = firebase.database();
 var storage = firebase.storage();
-
-
-
+//1.1.- Escuchador de cambio en la sesión 
 Auth.onAuthStateChanged(function(user) {
   if (user) {
   	$("nav").removeClass("hide")	;
@@ -32,12 +54,12 @@ Auth.onAuthStateChanged(function(user) {
 });
 
 
-// cerrar sesión
+//2. Cerrar sesión
 $("#cerrar").click(function (){
 	firebase.auth().signOut();
 });
 
-//boton registar 
+//3. Registrar con Email Botón 
 $("#registrar").submit(function (){
 	if ($("#password_registro").val() == $("#password_registro2").val()){
 		firebase.auth().createUserWithEmailAndPassword($("#email_registro").val(), $("#password_registro").val())
@@ -54,7 +76,7 @@ $("#registrar").submit(function (){
 	return false;
 });
 
-//*** INICIA LA BARRAS
+//4. IniciarCodigos  Materialize
 $(document).ready(function(){
     $('.sidenav').sidenav();
     $('select').formSelect();
@@ -62,14 +84,12 @@ $(document).ready(function(){
  });
 
 
-
-
-
-//Funcion que controla la navegacion de l apagina
+//5.- Función que controla la navegación de la APP
 function navegacion (paginaActiva){
 	$(".appPagina").addClass("hide");
 	$("" + paginaActiva).removeClass("hide");
 }
+//5.1.- Cierra la barra de menú
 $("a").click(function (){
 	if ( $(this).parent().parent().hasClass("sidenav") ){
 		$(".sidenav").sidenav("close");
@@ -80,7 +100,7 @@ $("a").click(function (){
 	}
 });
 
-/**Funcion que fija la barra de navegación cuando baja el**/
+//6.- Ffija la barra de navegación cuando baja el scrol
 $(document).scroll(function (){
 	
 	if ($(document).scrollTop() >= 50   ){
@@ -95,10 +115,9 @@ $(document).scroll(function (){
 
 });
 
-///Carga el perdol de usuario 
+//7.-  Carga el perfil de usuario en menu PERFIL Y PARA LA APP
 function getPerfil(usuario){
-	
-	
+
 	$("#userId").val(usuario.uid);
   	$("#email_perfil").val(usuario.email);
 	$("#nombre_perfil").val(usuario.displayName);
@@ -139,13 +158,13 @@ function getPerfil(usuario){
 
 
 
-//botón agregar foto de perfil
+//7.1.-  Botón agregar foto de perfil
 $("#addPhotoPerfil").click(function (){
 	$("#photoURL").click();
 
 });
 
-//Escuchamos el cambio de la imagen 
+//7.2.- Escuchamos el cambio de la imagen 
 $("#photoURL").change(function (e){
 	var file = e.target.files[0];
 	if (file){
@@ -157,7 +176,7 @@ $("#photoURL").change(function (e){
 
 });
 
-//Guardamos el perfil
+//7.3 .- Guardamos el perfil
 $("#perfil").submit(function(){
 	var fichero = document.getElementById("photoURL");
 	var imagenAsubir = fichero.files[0];
@@ -207,7 +226,7 @@ $("#perfil").submit(function(){
 	return false;
 });
 
-//Cambiar el rol de usuario 
+//7.4 Cambiar el rol de usuario 
 $("#rol").change(function (){
 	if( $(this).prop('checked') ){
 		$(".padre").removeClass("hide");
@@ -220,8 +239,7 @@ $("#rol").change(function (){
 	}
 });
 
-///Inicio de Sesión con formulario
-
+//8.- Inicio de Sesión con formulario
 $("#login").submit(function (){
 	Auth.signInWithEmailAndPassword($('#email_login').val(), $('#password_login').val())
 	.catch(function (error){
@@ -238,8 +256,8 @@ $("#login").submit(function (){
 	});
 	return false;
 });
-///////***INICIO CON FACEBOOK
 
+//9.-  Login con facebook
 $("#loginConFacebook").click(function (){
 		var provider = new firebase.auth.FacebookAuthProvider();
 		firebase.auth().signInWithPopup(provider).then(function(result) {
@@ -259,7 +277,7 @@ $("#loginConFacebook").click(function (){
 	 
 	});
 });
-
+// 9.1 Registro con facebook
 $("#RegistrarConFacebook").click(function (){
 		var provider = new firebase.auth.FacebookAuthProvider();
 		provider.setCustomParameters({
@@ -285,7 +303,7 @@ $("#RegistrarConFacebook").click(function (){
 });
 
 
-//**********ENVIAR PUBLICACION******************//
+//10.- Noton enviar post 
 $("#postSend").click(function (){
 	var postData = {
    			uid: $("#userId").val(),
@@ -301,7 +319,7 @@ $("#postSend").click(function (){
 			var img = adjuntos.pics[i];
 			storage.ref().child("imagenes/post/" + img.name).put(img)
 			.then(function (imagenSubida){
-				postData.urlsImagenes += imagenSubida.downloadURL;
+				postData.urlsImagenes += imagenSubida.downloadURL + "";
 			})
 
 			.catch(function (e){
@@ -325,8 +343,51 @@ $("#postSend").click(function (){
 
 });
 
+ //10.1.- Botones del post 
+ //10.1.a.-Boton  Adjuntar imagen 
+	//Objeto para adjuntos 
+	var adjuntos = {}
+	 adjuntos.contPics = 0;
+	 adjuntos.Contfil = 0;
+	 adjuntos.pics=[];
+	 adjuntos.fil=[];
+$("#postUpImagen").click(function (){
+	$("#postImagen").click();
+});
+$("#postImagen").change(function (e){
+	var archivos = e
+		var pic = archivos.target.files[0] ;
+		var src = URL.createObjectURL(pic)
+		if (pic){
+			$("#postFotos").append(`
+			<div class="col s3" ><img class="responsive-img" src="${src}" > </div>`); 
+			adjuntos.pics[adjuntos.contPics]=pic;
+			adjuntos.contPics+=1;
+		}
+	
+});
 
-//*** Cargar posts
+ //10.1.b.-Boton  Adjuntar ARCHIVO
+$("#postUpArchivo").click(function (){
+	$("#postAcrivos").click();
+});
+$("#postAcrivos").change(function (e){
+	var archivos = e
+		var add = archivos.target.files[0] ;
+		var src = URL.createObjectURL(add)
+		if (add){
+			$("#postAdjuntos").append(`
+			<div class="col s4" ><i class="material-icons green-text">insert_drive_file</i> ${add.name} </div>`); 
+			adjuntos.fil=add;
+			adjuntos.Contfil+=1;
+		}
+	
+	
+});
+
+
+
+//11 carga post en la pagina principal 
 
 var publicaciones = firebase.database().ref('posts/');
 publicaciones.on('child_added', function(data) {
@@ -373,48 +434,6 @@ function publicar(post){
 
 }
 
-
-/*** BOTONES  PARA POSTEAR  **/
-//adjuntar imagenes 
-
-var adjuntos = {}
- adjuntos.contPics = 0;
- adjuntos.Contfil = 0;
- adjuntos.pics=[];
- adjuntos.fil=[];
-$("#postUpImagen").click(function (){
-	$("#postImagen").click();
-});
-$("#postImagen").change(function (e){
-	var archivos = e
-		var pic = archivos.target.files[0] ;
-		var src = URL.createObjectURL(pic)
-		if (pic){
-			$("#postFotos").append(`
-			<div class="col s3" ><img class="responsive-img" src="${src}" > </div>`); 
-			adjuntos.pics[adjuntos.contPics]=pic;
-			adjuntos.contPics+=1;
-		}
-	
-});
-
-
-$("#postUpArchivo").click(function (){
-	$("#postAcrivos").click();
-});
-$("#postAcrivos").change(function (e){
-	var archivos = e
-		var add = archivos.target.files[0] ;
-		var src = URL.createObjectURL(add)
-		if (add){
-			$("#postAdjuntos").append(`
-			<div class="col s4" ><i class="material-icons green-text">insert_drive_file</i> ${add.name} </div>`); 
-			adjuntos.fil=add;
-			adjuntos.Contfil+=1;
-		}
-		console.log(adjuntos);
-	
-});
 
 
 
