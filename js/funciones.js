@@ -16,6 +16,7 @@ var storage = firebase.storage();
 
 Auth.onAuthStateChanged(function(user) {
   if (user) {
+  	console.log (user);
   	$("nav").removeClass("hide")	;
   	$(".sidenav-trigger").removeClass("hide");
   	getPerfil(user);
@@ -124,11 +125,7 @@ function getPerfil(usuario){
 	if (usuario.phoneNumber != null){
 		$("#telefono").val()=usuario.phoneNumber ;
 	}
-	var starCountRef = firebase.database().ref().child();
-	starCountRef.on('value', function(snapshot) {
-	  console.log(snapshot.val());
-	});
-		
+	
 
 }	
 
