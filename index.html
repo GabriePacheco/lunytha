@@ -9,6 +9,8 @@
          <link type="text/css" rel="stylesheet" href="materialize-social.css" />
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
         <link href="css/style.css" type="text/css" rel="stylesheet" media="screen,projection" />
+        <link href="css/jquery.flex-images.css" type="text/css" rel="stylesheet" media="screen,projection" />
+
       <!--Let browser know website is optimized for mobile-->
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -31,7 +33,7 @@
             <div class="nav-content">
               <ul class="tabs tabs-transparent #ff80ab pink accent-1">
                 <li class="tab"><a href="#test1"><i class="material-icons">camera_alt</i></a></li>
-                <li class="tab"><a class="active" href="#test2"><i class="material-icons">public</i></a></li>
+                <li class="tab"  class="active" ><a  class="active" href="#test2"><i class="material-icons">public</i></a></li>
                  <li class="tab"><a href="#test4"><i class="material-icons">message</i></a></li> 
                 <li class="tab"><a href="#test4"><i class="material-icons">history</i></a></li>
               </ul>
@@ -161,9 +163,6 @@
             </div>              
           </div><!-- fin Login --><!--Fin Registro-->
 
-
-
-
           <!-- Pagina de CUENTA>-->
           <div id="cuenta" class="container appPagina hide">
             <div class="row">
@@ -181,11 +180,12 @@
                           <div class="switch">
                             <label>
                               Soy Estudiate
-                              <input type="checkbox" id="rol" >
+                              <input type="checkbox" id="rol" >                        
                               <span class="lever #ff80ab pink accent-1"></span>
                               Soy Padre de Familia 
                             </label>
-                          </div>                   
+                          </div>   
+                          <input type="hidden" id="soy">                
                       </div>  
 
 
@@ -206,7 +206,7 @@
                       </div>     
                       <div class="input-field col s12 padre hide">
                         <i class="material-icons prefix">face</i>
-                        <input id="estudiante"  name ="estudiante" type="tel" class="validate"  placeholder="El nombre completo estuante al que represento">
+                        <input id="estudiante"  name ="estudiante" type="text" class="validate"  placeholder="El nombre completo estuante al que represento">
                         <label for="estudiante">Representado </label>
                       </div>           
                     
@@ -217,15 +217,41 @@
                 </form>
             </div>
           </div><!-- fin pagina de cuenta -->
+
+
+        <!-- *************HOME *************** -->
+         <div id="home" class="appPagina hide">
+            <div  id = "publicaciones"></div>   
+            <div id="acciones" class="modal bottom-sheet">
+              <div class="modal-content">
+               <div id = "postCip" class="chip">
+                <img id ="postImage" src="" alt="">
+                
+              </div>
+              <textarea id ="postText" placeholder="¿Que quieres informar?"></textarea>
+              <div id="postFotos" class="row"></div>
+              <input type="file" id="postImagen" class="hide" accept="images/*">
+              <div id ="postAdjuntos" class="row"></div>           
+              <input type="file" id="postAcrivos" class="hide" accept="application/pdf">
+              <div class="row">
+                 <div class="col s2" id = "postUpImagen"><i class="material-icons #880e4f pink-text darken-4  ">add_photo_alternate</i></div>
+                  <div class="col s2" id = "postUpArchivo"><i class="material-icons  green-text ">attach_file</i></div>
+                  <div class="col s2" id = "postColor"><i class="material-icons  blue-text">color_lens</i></div>
+                  <div class="right-align"> 
+                  <a id = "postSend" href="#" class="modal-close waves-effect waves-green btn-flat disable" data-aciones="true" >Publicar <i class="material-icons">send</i></a>
+                 </div> 
+              </div>
+              </div>
+         
+            </div>
+        <div  id = "doAcciones" class="fixed-action-btn hide">
+          <a class="btn-floating btn-large waves-effect waves-light pink  btn modal-trigger" data-aciones="true" href="#acciones"><i class="material-icons">border_color</i></a>
+
+        </div>
+          
+         </div> <!--Fin del home -->
+  
         </div><!-- fin Appcontenedora -->
-
- 
-
-
-
-
-
-       
         
         <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase-app.js"></script>
         <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase-auth.js"></script>
@@ -237,7 +263,9 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
         <script type="text/javascript" src="js/cookie.js"></script> 
         <script type="text/javascript" src="js/materialize.min.js"></script>
-        <script type="text/javascript" src= "js/funciones.js" ></script> 
+        
+        <script type="text/javascript" src= "js/jquery.flex-images.min.js" ></script> 
+<script type="text/javascript" src="js/funciones.js"></script>
 
    
     </body>

@@ -23,3 +23,31 @@ body{
   width: 100%;
  
 }
+textarea {
+	border: solid 0 #999;
+	width: 100%;
+	font-size: 1.3em; 
+	box-shadow: 0;
+	color: #880e4f;
+
+
+	
+}
+
+
+textarea:focus {
+    border-color: rgb(255, 255, 255);
+    box-shadow: 0 0px 0px rgba(229, 103, 23, 0.075)inset, 0 0 0px rgba(255,144,0,0.6);
+    outline: 0 none;
+   }
+
+.varias {
+  overflow: hidden !important;
+}
+ .varias img{
+      position: relative !important;
+       margin:-200px -80px -70px -50px !important;
+     
+       max-width: 100%;
+       width: 10%;
+  }
