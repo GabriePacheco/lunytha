@@ -52,7 +52,7 @@ Auth.onAuthStateChanged(function(user) {
   		userInLine.nombre = user.displayName;
   		userInLine.imagen = user.photoURL;
   		userInLine.telefono = user.phoneNumber;
-
+  		cargarPost();
   	}else{
   		navegacion("#cuenta");
   	}
@@ -422,12 +422,13 @@ $("#postAcrivos").change(function (we){
 
 //11 carga post en la pagina principal 
 
-var publicaciones = firebase.database().ref('posts/');
-publicaciones.on('child_added', function(data) {
-	publicar(data , "apend");
-}) .catch(function (ee){
-	M.toast({html: ee.message + ' <i class="material-icons red-text">error</i></span> '});
-});
+
+function cargarPost(){
+	var publicaciones = firebase.database().ref('posts/');
+	publicaciones.on('child_added', function(data) {
+		publicar(data , "apend");
+	});
+}
 
 function publicar(post, al){
 	var id = post.val().uid;
