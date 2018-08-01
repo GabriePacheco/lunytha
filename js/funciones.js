@@ -425,6 +425,8 @@ $("#postAcrivos").change(function (we){
 var publicaciones = firebase.database().ref('posts/');
 publicaciones.on('child_added', function(data) {
 	publicar(data , "apend");
+}) .catch(function (ee){
+	M.toast({html: ee.message + ' <i class="material-icons red-text">error</i></span> '});
 });
 
 function publicar(post, al){
