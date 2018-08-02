@@ -21,6 +21,10 @@
 // 10.1.- Botones del post s
 //10.1.a.-Boton  Adjuntar imagen 
 //11 carga post en la pagina principal 
+//12 Calcular Fecha y hora 
+
+/******************************************************/
+
 
 
 //1. Inicializando firebase/
@@ -326,6 +330,29 @@ $("#postSend").click(async function (){
 		uid: userInLine.uid,
 	};
 	if ($("#postText").val() != "" ||   adjuntos.contPics > 0 || adjuntos.Contfil > 0 ){
+		$("#publicaciones").prepend(`
+			<div class="row  publicando">
+				<div class="col s6">
+					<h6>Publicando..</h6>
+				</div>
+				<div class="col s6 right-align">  
+						<div class="preloader-wrapper small active">
+   							 <div class="spinner-layer spinner-green-only">
+						      <div class="circle-clipper left">
+						        <div class="circle"></div>
+						      </div><div class="gap-patch">
+						        <div class="circle"></div>
+						      </div><div class="circle-clipper right">
+						        <div class="circle"></div>
+						      </div>
+						    </div>
+						  </div>
+
+				</div>		  
+			</div>			  
+						  
+
+			`);
 		if (adjuntos.contPics > 0 ){
 			postData.imagenes=[];
 			for (var i = 0; i < adjuntos.pics.length; i++ ){
@@ -350,7 +377,8 @@ $("#postSend").click(async function (){
 		}
 
 		var fecha = new Date();
-		postData.fecha = fecha.getDate() +"/" + fecha.getMonth() + "/" + fecha.getYear() + " " + fecha.getHours() + ":" + fecha.getMinutes(); 
+		postData.fecha = fecha; 
+		postData.likes=0;
 	
 
 		adjuntos.contPics = 0;
@@ -440,6 +468,17 @@ function publicar(post, al){
 		publicacion.photoUrl = snapshot.val().imagen;
 		var postImagenes="";
 		var postAdjuntos ="";
+		var postLike ="";
+		
+		if (!post.val().likeA ){
+			postLike +=`<i class="material-icons" id = "like${publicacion.id}" onclick="like('${publicacion.id}',${post.val().likes}) " >favorite_border</i>` ;
+		}else{
+			if (post.val().likeA[userInLine.uid] ){
+				postLike +=`<i class="material-icons #ff80ab-text pink-text accent-2" id = "like${publicacion.id}" onclick="like('${publicacion.id}',${post.val().likes}) " >favorite</i>` ;
+			}else{
+				postLike +=`<i class="material-icons" id = "like${publicacion.id}" onclick="like('${publicacion.id}',${post.val().likes}) " >favorite_border</i>` ;	
+			}
+		}
 
 		if (post.val().archivos ){
 			if (post.val().archivos.length == 1 ){
@@ -462,41 +501,121 @@ function publicar(post, al){
 				 	postImagenes += `<div class="item" data-w="${imagen.width}" data-h="${imagen.height}" ><img src="${post.val().imagenes[galeria]}"></div>`;
 				 }
 				postImagenes +=`</div>`;
-				
+				 $('.flex-images').flexImages({rowHeight: 180});
 
 			}
-			$('.flex-images').flexImages({rowHeight: 180});
+			
 
 		
 		}
-
-
 		
-		$("#publicaciones").append(`
-			      <div class="card">
+		$("#publicaciones").prepend(`
+			      <div id = "${publicacion.id}" class="card" >
+			      	<div class="usuarioPost"> 
 			      	  <div class="chip white">
-					    <img src="${publicacion.photoUrl}" alt="${publicacion.username}">
-					    ${publicacion.username}
-					    <small>${post.val().fecha}</small>
+					    <img src="${publicacion.photoUrl}" alt="${publicacion.username}" >
+					    <b>${publicacion.username}</b>
 					  </div>
+					  <small>${calcularFecha(post.val().fecha)}</small>
+					</div> 
 					  
-			        <div class="flow-text">
-			          <p>${post.val().texto}</p>
-
+			        <div class="texto">
+			          <p class="flow-text">${post.val().texto}</p>
 			        </div>
 			        ${postImagenes}
 					${postAdjuntos}	
+					  <div class="card sticky-action">
+ 						  <div class="card-action row">
+ 						 	 <div class="col s6">${postLike}</div>	
+
+ 						 	 <div class="col s6 right-align"><i class="material-icons">chat_bubble_outline</i></div>						  
+ 						  </div>  
+
+  					  </div>
+
 			      </div>
-		
 	
-		`)	;
+		`);
+		$(".publicando").remove();	
+
  	});
 
 	
 
 }
+//12 Calcular Fecha y hora 
+function calcularFecha (fechas){
+	let fecha = new Date(fechas);
+	let hoy = new Date().getTime();
+	let pFecha = new Date (fechas).getTime();
+	let dif = (hoy -pFecha );
+	let dias = dif / (1000 * 60 * 60 * 24 );
+	let horas = dif / (1000 * 60 * 60  );
+	let minutos = dif / (1000 * 60  );
+	var mostrar = "Justo ahora";
+
+	if(dias < 1 && horas < 1 && minutos >= 1){
+		mostrar = "hace " +  Math.floor(minutos) + " minutos";
+	}
+	if(dias < 1 && horas >=1  ){
+		mostrar = "hace " +  Math.floor(horas) + " horas";
+	}
+
+	if(dias == 1){
+		mostrar = "Ayer a las  "  + fecha.getHours() + ":" + fecha.getMinutes();
+	}
+
+	if(dias > 1){
+		mostrar =  fecha.getDate()+"/"+ fecha.getMonth() +" a las " + fecha.getHours() + ":" + fecha.getMinutes();
+	}
+
+	if(dias < 1 && horas < 1 && minutos < 1  && minutos > 0){
+		mostrar = "hace poco";
+	}
+
+	if(dias===NaN && horas===NaN  && minutos===NaN  ){
+		mostrar = "Justo ahora";
+	}
+
+	return mostrar;
+}
+// Like 
+function like (id, totaldelikes){
+	let tolike = document.getElementById("like" + id );
+	if (tolike.innerHTML== "favorite_border"){
+		tolike.innerHTML="favorite";
+		tolike.className +=  " #ff80ab-text pink-text accent-2"
+		
+		var  likesRef = base.ref().child("/posts/" + id);
+		likesRef.transaction (function(post){
+			if (post){	
+				if (!post.likeA || !post.likeA[userInLine.uid]){	
+					post.likes++;
+					 if (!post.LikeA) {
+				         post.likeA = {};
+				      }
+				      post.likeA[userInLine.uid]=true;
+			  	}
+			}
+			likesRef.update(post);
+
+		});
+		
+
+	}else{
+		tolike.innerHTML="favorite_border";
+		var  likesRef = base.ref().child("/posts/" + id);
+		likesRef.transaction (function(post){
+			if (post){	
+					post.likes--;	
+				     post.likeA[userInLine.uid]=false;
+			  	}
+			likesRef.update(post);
+		});
+	}
 
 
+}
 
 	
 
