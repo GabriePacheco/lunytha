@@ -22,6 +22,7 @@
 //10.1.a.-Boton  Adjuntar imagen 
 //11 carga post en la pagina principal 
 //12 Calcular Fecha y hora 
+// 13 Like 
 
 /******************************************************/
 
@@ -43,7 +44,8 @@ var storage = firebase.storage();
 //1.1.- Escuchador de cambio en la sesión 
 
 var userInLine = {}
-
+var config = {}
+config.acceso = 3;
 Auth.onAuthStateChanged(function(user) {
   if (user) {
   
@@ -156,16 +158,21 @@ function getPerfil(usuario){
 			$("#telefono").val( snapshot.val().telefono);
 		 }
 		
-		if (snapshot.val().permisos >= 3){
-				$("#doAcciones").removeClass("hide");
-      			$('.modal').modal();
-      			$("#postImage").attr("src",usuario.photoURL );
-   				$("#postCip").append(usuario.displayName);
+		if (snapshot.val().permisos >= config.acceso){
+				
    				$("#rol").parent().addClass('hide')
    				$("#soy").val(snapshot.val().rol);
-   				$("#soy").attr("data-scopes", snapshot.val().permisos);
-		
-		} 
+ 				$("#soy").attr("data-scopes", snapshot.val().permisos);	
+				//se activa //aciones
+ 				$("#doAcciones").removeClass("hide");
+      			$('#acciones').modal();
+      			$("#postImage").attr("src",usuario.photoURL );
+   				$("#postCip").append(usuario.displayName);
+   				//se actva edicion	
+ 				$('#editar').modal();
+      			$("#epostImage").attr("src",usuario.photoURL );
+      			$("#epostCip").append(usuario.displayName);
+ 		} 
 
 	});
 
@@ -362,11 +369,12 @@ $("#postSend").click(async function (){
 		}
 		if ( adjuntos.Contfil > 0){
 			postData.archivos=[];
-	
+			postData.archivosNombres=[];
 			for (var f = 0 ; f < adjuntos.fil.length; f++){
-				console.log(adjuntos.fil[f]);
+				console.log(adjuntos.fil[f].name);
 				var URLarchivo = await cargarArchivos("archivos/posts" , adjuntos.fil[f]);
 				postData.archivos.push(URLarchivo);
+				postData.archivosNombres.push(adjuntos.fil[f].name);
 			}
 		}
 		if ($("#postText").val() != ""){
@@ -379,7 +387,6 @@ $("#postSend").click(async function (){
 		var fecha = new Date();
 		postData.fecha = fecha; 
 		postData.likes=0;
-	
 
 		adjuntos.contPics = 0;
 		 adjuntos.Contfil = 0;
@@ -421,7 +428,7 @@ $("#postImagen").change(function (e){
 		var src = URL.createObjectURL(pic)
 		if (pic){
 			$("#postFotos").append(`
-			<div class="col s3" ><img class="responsive-img" src="${src}" > </div>`); 
+			<div class="col s3 tum" ><img class="responsive-img" src="${src}" ></div>`); 
 			adjuntos.pics[adjuntos.contPics]=pic;
 			adjuntos.contPics+=1;
 		}
@@ -434,31 +441,33 @@ $("#postUpArchivo").click(function (){
 });
 $("#postAcrivos").change(function (we){
 	let archivos =$(this).get(0).files;
-
-	
 		if (archivos){
 			$("#postAdjuntos").append(`
-			<div class="col s4" ><i class="material-icons green-text">insert_drive_file</i> ${archivos[0].name} </div>`); 
+			<div class="col s12" ><i class="material-icons green-text">insert_drive_file</i> ${archivos[0].name} </div>`); 
 			 adjuntos.fil[adjuntos.Contfil]= archivos[0];
 		    adjuntos.Contfil+=1;
 		}
-	
-	
 });
 
-
-
+//10.2.- Controla el tamaño del texto al escribir en un post 
+$("#postText").on('keyup', function (){
+	if ($(this).val().length >100){
+		$(this).css("font-size" , "1em");
+	}else{
+		$(this).css("font-size" , "1.3em");
+	}
+});
 //11 carga post en la pagina principal 
 
 
 function cargarPost(){
 	var publicaciones = firebase.database().ref('posts/');
-	publicaciones.on('child_added', function(data) {
-		publicar(data , "apend");
-	});
+	publicaciones.on('child_added', function(data){
+		publicar(data);
+	})
+	
 }
-
-function publicar(post, al){
+function publicar(post){
 	var id = post.val().uid;
 	var publicacion = {};
 	publicacion.id = post.key;
@@ -469,20 +478,21 @@ function publicar(post, al){
 		var postImagenes="";
 		var postAdjuntos ="";
 		var postLike ="";
-		
-		if (!post.val().likeA ){
-			postLike +=`<i class="material-icons" id = "like${publicacion.id}" onclick="like('${publicacion.id}',${post.val().likes}) " >favorite_border</i>` ;
+		if (!post.val().likeA || !post.val().likeA[userInLine.uid] ){
+			postLike +=`<i class="material-icons" id = "like${publicacion.id}" onclick="like('${publicacion.id}',${post.val().likes}) " >favorite_border</i>` ;	
+			
 		}else{
-			if (post.val().likeA[userInLine.uid] ){
-				postLike +=`<i class="material-icons #ff80ab-text pink-text accent-2" id = "like${publicacion.id}" onclick="like('${publicacion.id}',${post.val().likes}) " >favorite</i>` ;
-			}else{
-				postLike +=`<i class="material-icons" id = "like${publicacion.id}" onclick="like('${publicacion.id}',${post.val().likes}) " >favorite_border</i>` ;	
-			}
+			postLike +=`<i class="material-icons #ff80ab-text pink-text accent-2" id = "like${publicacion.id}" onclick="like('${publicacion.id}',${post.val().likes}) " >favorite</i>` ;		
 		}
-
 		if (post.val().archivos ){
 			if (post.val().archivos.length == 1 ){
-				postAdjuntos+= `<a href="${post.val().archivos[0]}" download data-aciones="true"><i class="material-icons" >cloud_download</i>  </a>`;				
+				postAdjuntos+= `<div class= "adjuntos">`;
+				for (var filer = 0; filer <  post.val().archivos.length; filer++){
+
+					postAdjuntos+= `<a data-aciones="true" href="${post.val().archivos[filer]}" ><i class="material-icons">description</i>${post.val().archivosNombres[filer]}</a>`;
+				}
+
+				postAdjuntos+= `</div>`;				
 			}
 		}
 		if (post.val().imagenes){
@@ -492,32 +502,38 @@ function publicar(post, al){
 			          <img src="${post.val().imagenes[0]}">		          
 			        </div>`;
 			}
-			if (post.val().imagenes.length  > 1 ){
-				postImagenes +=`<div class="flex-images">`;
-				 for (var galeria = 0; galeria < post.val().imagenes.length; galeria++ ){
-				 	var imagen = new Image();
-				 	imagen.src = post.val().imagenes[galeria];
-
-				 	postImagenes += `<div class="item" data-w="${imagen.width}" data-h="${imagen.height}" ><img src="${post.val().imagenes[galeria]}"></div>`;
-				 }
-				postImagenes +=`</div>`;
-				 $('.flex-images').flexImages({rowHeight: 180});
-
+			if (post.val().imagenes.length  == 2){
+				postImagenes +=	`<div class="row galeria">`;
+				var img1= new Image();
+				img1.src = post.val().imagenes[0];
+				var img2 = new Image();
+				img2.src = post.val().imagenes[1];
+				var height = 200;
+						postImagenes +=	`<div class="col s6" style="background-image: url('${post.val().imagenes[0]}'); no-repeat;background-size: cover; height: ${height}px !important; background-position: center center;" >`;
+						postImagenes +=	`</div>`;
+						postImagenes +=	`<div class="col s6" style="background-image: url('${post.val().imagenes[1]}'); no-repeat;background-size: cover; height: ${height}px !important; background-position: center center;" >`;
+						postImagenes +=	`</div>`;	
+						postImagenes +=  `</div>`;
 			}
-			
-
-		
 		}
-		
-		$("#publicaciones").prepend(`
-			      <div id = "${publicacion.id}" class="card" >
-			      	<div class="usuarioPost"> 
-			      	  <div class="chip white">
+		var objetoPublicacion = `
+			     <div id = "${publicacion.id}" class="card" >
+			      	<div class="usuarioPost"> 		      	
+			      	 <a class='dropdown-trigger right  blue-grey-text' data-aciones="true" href='#' data-target='menu${publicacion.id}'><i class="material-icons">more_vert</i></a>
+			      	
+						  <ul id='menu${publicacion.id}' class='dropdown-content blue-grey-tex' >
+						    <li><a href="#!" data-aciones="true" onclick = "reciclar('${publicacion.id}' );" class="blue-grey-text"><i class="material-icons ">delete_forever</i>Borrar</a></li>
+						    <li><a href="#!" data-aciones="true" onclick = "editar ('${publicacion.id}')" class="blue-grey-text"><i class="material-icons blue-grey-text">edit</i>Editar</a></li>		
+						  </ul>
+	  	     		  <div class="chip white">
 					    <img src="${publicacion.photoUrl}" alt="${publicacion.username}" >
 					    <b>${publicacion.username}</b>
 					  </div>
-					  <small>${calcularFecha(post.val().fecha)}</small>
-					</div> 
+					    <small>${calcularFecha(post.val().fecha)}</small>
+							
+					  
+					</div>
+
 					  
 			        <div class="texto">
 			          <p class="flow-text">${post.val().texto}</p>
@@ -527,22 +543,20 @@ function publicar(post, al){
 					  <div class="card sticky-action">
  						  <div class="card-action row">
  						 	 <div class="col s6">${postLike}</div>	
-
  						 	 <div class="col s6 right-align"><i class="material-icons">chat_bubble_outline</i></div>						  
  						  </div>  
-
-  					  </div>
-
+ 					  </div>
 			      </div>
-	
-		`);
-		$(".publicando").remove();	
+		`;
+		$("#publicaciones").prepend(objetoPublicacion);
+		$('.dropdown-trigger').dropdown();
 
  	});
-
-	
+	;
+	$(".publicando").remove();	
 
 }
+
 //12 Calcular Fecha y hora 
 function calcularFecha (fechas){
 	let fecha = new Date(fechas);
@@ -579,7 +593,7 @@ function calcularFecha (fechas){
 
 	return mostrar;
 }
-// Like 
+// 13 Like 
 function like (id, totaldelikes){
 	let tolike = document.getElementById("like" + id );
 	if (tolike.innerHTML== "favorite_border"){
@@ -617,7 +631,43 @@ function like (id, totaldelikes){
 
 }
 
-	
+
+//14.- Borrar el POST
+function reciclar(postId){
+	base.ref('posts/' + postId).remove().then(function(){
+		$("#" + postId).remove();
+	});
+}	
+function editar (postId){
+	var  editarPost = base.ref().child("/posts/" + postId);
+	editarPost.once('value').then(function (snp){
+		$("#epostText").val("");
+		if (snp.val().texto){
+			$("#epostText").val(snp.val().texto);
+		}
+		var listPhotos = '';
+		if (snp.val().imagenes){
+			var listPhotos = '';
+			for (var ephotos = 0; ephotos < snp.val().imagenes.length; ephotos++){
+				listPhotos +=`<div class="col s3 tum"><img class="responsive-img" onclik="quitar()" src="${snp.val().imagenes[ephotos]}"><i class="material-icons">delete</i></div>`; 							
+			}
+
+		}
+		var listArchivos = '';
+		if (snp.val().archivos){
+			for (var earchivos = 0; earchivos < snp.val().archivos.length; earchivos++){
+				listArchivos +=`<div class="col 12"><a href = "${snp.val().archivos[earchivos]}" download><i class="material-icons">insert_drive_file</i> ${snp.val().archivosNombres[earchivos]}</a> <i class="material-icons">delete</i></div>`; 							
+			}		
+		}
+		$("#epostFotos").html(listPhotos);
+		$("#epostAdjuntos").html(listArchivos);
+
+
+	});
+
+	$("#editar").modal("open");
+}
+
 
 
 
