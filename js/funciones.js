@@ -16,10 +16,16 @@
 //8.- Inicio de Sesión con formulario
 //9.-  Login con facebook
 // 9.1 Registro con facebook
-//10.- Enviar post s
+//10.- Enviar post 
+//10.A.- Carga de archivos 
 // 10.1.- Botones del post s
 //10.1.a.-Boton  Adjuntar imagen 
 //11 carga post en la pagina principal 
+//12 Calcular Fecha y hora 
+// 13 Like 
+
+/******************************************************/
+
 
 
 //1. Inicializando firebase/
@@ -35,21 +41,24 @@ firebase.initializeApp(config);
 var  Auth = firebase.auth();
 var base = firebase.database();
 var storage = firebase.storage();
-var userInLIne ={}
 //1.1.- Escuchador de cambio en la sesión 
-Auth.onAuthStateChanged(function(user) {
-if (user) {
-  	$("nav").removeClass("hide");
-  	userInLIne.id = user.uid;
-  	userInLIne.nombre= user.displayName;
-  	userInLIne.fotoURL= user.photoURL;
-  	userInLIne.email= user.email;
-  	userInLIne.telefono= user.phoneNumber;
 
+var userInLine = {}
+var config = {}
+config.acceso = 3;
+Auth.onAuthStateChanged(function(user) {
+  if (user) {
+  
+  	$("nav").removeClass("hide")	;
   	$(".sidenav-trigger").removeClass("hide");
   	getPerfil(user);
   	if (user.displayName != null ){
   		navegacion("#home");
+  		userInLine.uid = user.uid; 
+  		userInLine.nombre = user.displayName;
+  		userInLine.imagen = user.photoURL;
+  		userInLine.telefono = user.phoneNumber;
+  		cargarPost();
   	}else{
   		navegacion("#cuenta");
   	}
@@ -137,6 +146,7 @@ function getPerfil(usuario){
 	if (usuario.phoneNumber != null){
 		$("#telefono").val()=usuario.phoneNumber ;
 	}
+
 	var userId = firebase.auth().currentUser.uid;
 	return firebase.database().ref('/users/' + userId).once('value').then(function(snapshot) {
 	  var rol = (snapshot.val() && snapshot.val().rol) || 'Anonymous';
@@ -148,16 +158,21 @@ function getPerfil(usuario){
 			$("#telefono").val( snapshot.val().telefono);
 		 }
 		
-		if (snapshot.val().permisos >= 3){
-				$("#doAcciones").removeClass("hide");
-      			$('.modal').modal();
-      			$("#postImage").attr("src",usuario.photoURL );
-   				$("#postCip").append(usuario.displayName);
+		if (snapshot.val().permisos >= config.acceso){
+				
    				$("#rol").parent().addClass('hide')
    				$("#soy").val(snapshot.val().rol);
-   				$("#soy").attr("data-scopes", snapshot.val().permisos);
-		
-		} 
+ 				$("#soy").attr("data-scopes", snapshot.val().permisos);	
+				//se activa //aciones
+ 				$("#doAcciones").removeClass("hide");
+      			$('#acciones').modal();
+      			$("#postImage").attr("src",usuario.photoURL );
+   				$("#postCip").append(usuario.displayName);
+   				//se actva edicion	
+ 				$('#editar').modal();
+      			$("#epostImage").attr("src",usuario.photoURL );
+      			$("#epostCip").append(usuario.displayName);
+ 		} 
 
 	});
 
@@ -192,14 +207,14 @@ $("#perfil").submit(function(){
 	if (imagenAsubir){
 		storage.ref().child("imagenes/userPhoto/" + $("#userId").val()).put(imagenAsubir)
 		.then(function (snap){
-				var urlImage = snap.downloadURL;
-				perfil.imagen = snap.downloadURL;		
+				var urlImage = snap.downloadURL;	
+				perfil.imagen = snap.downloadURL;
 				Auth.currentUser.updateProfile({
 					photoURL: urlImage
 				});
 		});
 	}
-		
+	perfil.imagen = userInLine.imagen;	
 	perfil.nombre = $("#nombre_perfil").val();
 	perfil.email = $("#email_perfil").val();
 	
@@ -225,11 +240,6 @@ $("#perfil").submit(function(){
 	}).then(function(){
 		M.toast({html: '<span>Tus datos se actualizaron! <i class="material-icons green-text">check_circle</i></span> '});
 	}) 
-
-	if (perfil.imagen == null){
-		perfil.imagen = userInLIne.fotoURL;
-		console.log(perfil.imagen);
-	}
 
 	var guardar = {};
 	guardar["users/" + $("#userId").val()]=perfil; 
@@ -315,58 +325,101 @@ $("#RegistrarConFacebook").click(function (){
 
 
 //10.- Boton enviar post 
-$("#postSend").click(async function (){
-	if ($("#postText").val() != "" ||  adjuntos.Contfil >0 || adjuntos.contPics>0 ){
-		var postData={};
-		
-		postData.uid = userInLIne.id;
-		postData.texto = $("#postText").val();
-		 if (adjuntos.contPics > 0){
-	 		postData.Imagenes = ""; 	
-		 	for (var i =0; i < adjuntos.contPics;i++ ){
-		 		postData.Imagenes+= await cargarFoto( "posts", adjuntos.pics[i]);
-		 		if (adjuntos.pics[i+1]!= undefined){
-		 			postData.Imagenes+=",";
-		 		}	
-		 	}
-		}
-		var fecha = new Date();
-		postData.fecha = fecha.getDate() + "/" +  fecha.getMonth() + "/" + fecha.getYear(); 
-		var newPostKey = firebase.database().ref().child('posts').push().key;
-		var updates = {};
-
-  		updates['/posts/' + newPostKey] = postData;
-  		firebase.database().ref().update(updates);
-
-  	adjuntos.contPics = 0;
-	adjuntos.Contfil = 0;
-	adjuntos.pics=[];
-	adjuntos.fil=[];
-	$("#postText").val("");
-	$("#postFotos").html("");
-
-
-	}
-});
-	//Objeto para adjuntos
-var adjuntos = {}
+//Objeto para adjuntos 
+	var adjuntos = {}
 	 adjuntos.contPics = 0;
 	 adjuntos.Contfil = 0;
 	 adjuntos.pics=[];
 	 adjuntos.fil=[];
 
-async function cargarFoto(carpeta, foto){
-	return  await storage.ref().child("imagenes/" +carpeta+"/" + foto.name ).put(foto)
-		.then(function (snap){
-				var URLImage = (snap && snap.downloadURL ) || "nol lo logramos" ;
-				return URLImage;
-		});
+$("#postSend").click(async function (){
+	var postData = {
+		uid: userInLine.uid,
+	};
+	var newPostKey = firebase.database().ref().child('posts').push().key;
+	if ($("#postText").val() != "" ||   adjuntos.contPics > 0 || adjuntos.Contfil > 0 ){
+		$("#publicaciones").prepend(`
+			<div class="row  publicando">
+				<div class="col s6">
+					<h6>Publicando..</h6>
+				</div>
+				<div class="col s6 right-align">  
+						<div class="preloader-wrapper small active">
+   							 <div class="spinner-layer spinner-green-only">
+						      <div class="circle-clipper left">
+						        <div class="circle"></div>
+						      </div><div class="gap-patch">
+						        <div class="circle"></div>
+						      </div><div class="circle-clipper right">
+						        <div class="circle"></div>
+						      </div>
+						    </div>
+						  </div>
+
+				</div>		  
+			</div>			  
+						  
+
+			`);
+		if (adjuntos.contPics > 0 ){
+			postData.imagenes=[];
+			for (var i = 0; i < adjuntos.pics.length; i++ ){
+				var URLimagen = await cargarArchivos("imagenes/posts" , adjuntos.pics[i]);
+				postData.imagenes.push(URLimagen);
+			}
+		}
+		if ( adjuntos.Contfil > 0){
+			postData.archivos=[];
+			postData.archivosNombres=[];
+			for (var f = 0 ; f < adjuntos.fil.length; f++){
+				console.log(adjuntos.fil[f].name);
+				var URLarchivo = await cargarArchivos("archivos/posts" , adjuntos.fil[f]);
+				postData.archivos.push(URLarchivo);
+				postData.archivosNombres.push(adjuntos.fil[f].name);
+			}
+		}
+		if ($("#postText").val() != ""){
+			postData.texto = $("#postText").val();
+
+		}else{
+			postData.texto=""
+		}
+
+		var fecha = new Date();
+		postData.fecha = fecha; 
+		postData.likes=0;
+
+		adjuntos.contPics = 0;
+		 adjuntos.Contfil = 0;
+		 adjuntos.pics = [];
+		 adjuntos.fil = [];
+		 $("#postText").html("");
+		 $("#postText").val("");
+		 $("#postAdjuntos").html("");
+		 $("#postFotos").html("");
+
+		var newPostKey = firebase.database().ref().child('posts').push().key;
+		var updates = {};
+		
+		updates['/posts/' + newPostKey] = postData;
+		return firebase.database().ref().update(updates);
+	}
+
+	 
+	
+
+});
+//10.A.- CArga de archivos 
+function cargarArchivos (ruta, archivo){
+	var postArchivo = storage.ref().child( ruta + "/" + archivo.name);
+	return postArchivo.put (archivo).then(function (snap){
+
+		return snap.downloadURL;
+	});
 
 }
-
  //10.1.- Botones del post 
  //10.1.a.-Boton  Adjuntar imagen 
- 
 	
 $("#postUpImagen").click(function (){
 	$("#postImagen").click();
@@ -377,7 +430,7 @@ $("#postImagen").change(function (e){
 		var src = URL.createObjectURL(pic)
 		if (pic){
 			$("#postFotos").append(`
-			<div class="col s3" ><img class="responsive-img" src="${src}" > </div>`); 
+			<div class="col s3 tum" ><img class="responsive-img" src="${src}" ></div>`); 
 			adjuntos.pics[adjuntos.contPics]=pic;
 			adjuntos.contPics+=1;
 		}
@@ -388,105 +441,276 @@ $("#postImagen").change(function (e){
 $("#postUpArchivo").click(function (){
 	$("#postAcrivos").click();
 });
-$("#postAcrivos").change(function (e){
-	var archivos = e
-		var add = archivos.target.files[0] ;
-		var src = URL.createObjectURL(add)
-		if (add){
+$("#postAcrivos").change(function (we){
+	let archivos =$(this).get(0).files;
+		if (archivos){
 			$("#postAdjuntos").append(`
-			<div class="col s4" ><i class="material-icons green-text">insert_drive_file</i> ${add.name} </div>`); 
-			adjuntos.fil=add;
-			adjuntos.Contfil+=1;
+			<div class="col s12" ><i class="material-icons green-text">insert_drive_file</i> ${archivos[0].name} </div>`); 
+			 adjuntos.fil[adjuntos.Contfil]= archivos[0];
+		    adjuntos.Contfil+=1;
 		}
-	
-	
 });
 
-
-
+//10.2.- Controla el tamaño del texto al escribir en un post 
+$("#postText").on('keyup', function (){
+	if ($(this).val().length >100){
+		$(this).css("font-size" , "1em");
+	}else{
+		$(this).css("font-size" , "1.3em");
+	}
+});
 //11 carga post en la pagina principal 
 
-var publicaciones = firebase.database().ref('posts/');
-publicaciones.on('child_added', function(data) {
-	publicar(data);
-});
 
-function publicar(post){
+function cargarPost(){
+	var publicaciones = firebase.database().ref('posts/');
+	publicaciones.on('child_added', function(data){
+		publicar(data);
+	})
 	
-	 firebase.database().ref('/users/' + post.val().uid).once('value')
-	.then(function(snapshot) {
-  			var userPost = {};
-  			userPost.nombre = snapshot.val().nombre;
-  			userPost.photoURL = snapshot.val().imagen;
+}
+function publicar(post){
+	var id = post.val().uid;
+	var publicacion = {};
+	publicacion.id = post.key;
+	publicacion.texto =post.val().texto;
+	firebase.database().ref('/users/' + id).once('value').then(function(snapshot) {
+		publicacion.username = snapshot.val().nombre;
+		publicacion.photoUrl = snapshot.val().imagen;
+		var postImagenes="";
+		var postAdjuntos ="";
+		var postLike ="";
+		if (!post.val().likeA || !post.val().likeA[userInLine.uid] ){
+			postLike +=`<i class="material-icons" id = "like${publicacion.id}" onclick="like('${publicacion.id}',${post.val().likes}) " >favorite_border</i>` ;	
+			
+		}else{
+			postLike +=`<i class="material-icons #ff80ab-text pink-text accent-2" id = "like${publicacion.id}" onclick="like('${publicacion.id}',${post.val().likes}) " >favorite</i>` ;		
+		}
+		if (post.val().archivos ){
+			if (post.val().archivos.length == 1 ){
+				postAdjuntos+= `<div class= "adjuntos">`;
+				for (var filer = 0; filer <  post.val().archivos.length; filer++){
 
-  			if (post.val().Imagenes ){
-  				var urls = post.val().Imagenes.split(",");
-  				console.log(urls.length);
-  				if (urls.length>1){
-  					var mostrarImagen = `<div class="row">`;
-  					for (var w=0; w<= urls.length;w++){
-		  					mostrarImagen+=`
-		  					<div class="col s6">
-		  						<img src="${urls[w]}" class="responsive-img">
-		  					</div>
-		  					
-		  				</div>`;
-	  				}
-	  				mostrarImagen+= `</div>`;
+					postAdjuntos+= `<a data-aciones="true" href="${post.val().archivos[filer]}" ><i class="material-icons">description</i>${post.val().archivosNombres[filer]}</a>`;
+				}
 
+				postAdjuntos+= `</div>`;				
+			}
+		}
+		if (post.val().imagenes){
+			if (post.val().imagenes.length  == 1){
+			postImagenes +=
+					`<div class="card-image">
+			          <img src="${post.val().imagenes[0]}">		          
+			        </div>`;
+			}
+			if (post.val().imagenes.length  == 2){
+				postImagenes +=	`<div class="row galeria">`;
+				var img1= new Image();
+				img1.src = post.val().imagenes[0];
+				var img2 = new Image();
+				img2.src = post.val().imagenes[1];
+				var height = 200;
+						postImagenes +=	`<div class="col s6" style="background-image: url('${post.val().imagenes[0]}'); no-repeat;background-size: cover; height: ${height}px !important; background-position: center center;" >`;
+						postImagenes +=	`</div>`;
+						postImagenes +=	`<div class="col s6" style="background-image: url('${post.val().imagenes[1]}'); no-repeat;background-size: cover; height: ${height}px !important; background-position: center center;" >`;
+						postImagenes +=	`</div>`;	
+						postImagenes +=  `</div>`;
+			}
+		}
+		var objetoPublicacion = `
+			     <div id = "${publicacion.id}" class="card" >
+			      	<div class="usuarioPost"> 		      	
+			      	 <a class='dropdown-trigger right  blue-grey-text' data-aciones="true" href='#' data-target='menu${publicacion.id}'><i class="material-icons">more_vert</i></a>
+			      	
+						  <ul id='menu${publicacion.id}' class='dropdown-content blue-grey-tex' >
+						    <li><a href="#!" data-aciones="true" onclick = "reciclar('${publicacion.id}' );" class="blue-grey-text"><i class="material-icons ">delete_forever</i>Borrar</a></li>
+						    <li><a href="#!" data-aciones="true" onclick = "editar ('${publicacion.id}')" class="blue-grey-text"><i class="material-icons blue-grey-text">edit</i>Editar</a></li>		
+						  </ul>
+	  	     		  <div class="chip white">
+					    <img src="${publicacion.photoUrl}" alt="${publicacion.username}" >
+					    <b>${publicacion.username}</b>
+					  </div>
+					    <small>${calcularFecha(post.val().fecha)}</small>
+							
+					  
+					</div>
 
-  				}else {
-  				var mostrarImagen = `<div class="card-image">
-  					<img src="${urls[0]}" class="responsive-img">
-  				</div>`;
-
-  				}
-  			
-
-
-  			}else{
-  				mostrarImagen = "";
-  			}
-
-
-
-  			$("#publicaciones").prepend(`
-  				<div>
-
-			    <div class="col s12 ">
-			      <div class="card">
-				      <div class="chip white">
-					    <img src="${userPost.photoURL}" alt="${userPost.nombre}">
-					    ${userPost.nombre}<small>post.val().fecha</small>
-
-					    
-					 </div>	
-					  ${mostrarImagen}
-					<div class="card-content">
-			          <p>${post.val().texto}</p>
-			          
+					  
+			        <div class="texto">
+			          <p class="flow-text">${post.val().texto}</p>
 			        </div>
-					
-				
-
+			        ${postImagenes}
+					${postAdjuntos}	
+					  <div class="card sticky-action">
+ 						  <div class="card-action row">
+ 						 	 <div class="col s6">${postLike}</div>	
+ 						 	 <div class="col s6 right-align"><i class="material-icons">chat_bubble_outline</i></div>						  
+ 						  </div>  
+ 					  </div>
 			      </div>
-			    </div>
-			  </div>
-				
- 			`);							
+		`;
+		$("#publicaciones").prepend(objetoPublicacion);
+		$('.dropdown-trigger').dropdown();
+
+ 	});
+	;
+	$(".publicando").remove();	
+
+}
+
+//12 Calcular Fecha y hora 
+function calcularFecha (fechas){
+	let fecha = new Date(fechas);
+	let hoy = new Date().getTime();
+	let pFecha = new Date (fechas).getTime();
+	let dif = (hoy -pFecha );
+	let dias = dif / (1000 * 60 * 60 * 24 );
+	let horas = dif / (1000 * 60 * 60  );
+	let minutos = dif / (1000 * 60  );
+	var mostrar = "Justo ahora";
+
+	if(dias < 1 && horas < 1 && minutos >= 1){
+		mostrar = "hace " +  Math.floor(minutos) + " minutos";
+	}
+	if(dias < 1 && horas >=1  ){
+		mostrar = "hace " +  Math.floor(horas) + " horas";
+	}
+
+	if(dias == 1){
+		mostrar = "Ayer a las  "  + fecha.getHours() + ":" + fecha.getMinutes();
+	}
+
+	if(dias > 1){
+		mostrar =  fecha.getDate()+"/"+ fecha.getMonth() +" a las " + fecha.getHours() + ":" + fecha.getMinutes();
+	}
+
+	if(dias < 1 && horas < 1 && minutos < 1  && minutos > 0){
+		mostrar = "hace poco";
+	}
+
+	if(dias===NaN && horas===NaN  && minutos===NaN  ){
+		mostrar = "Justo ahora";
+	}
+
+	return mostrar;
+}
+// 13 Like 
+function like (id, totaldelikes){
+	let tolike = document.getElementById("like" + id );
+	if (tolike.innerHTML== "favorite_border"){
+		tolike.innerHTML="favorite";
+		tolike.className +=  " #ff80ab-text pink-text accent-2"
+		
+		var  likesRef = base.ref().child("/posts/" + id);
+		likesRef.transaction (function(post){
+			if (post){	
+				if (!post.likeA || !post.likeA[userInLine.uid]){	
+					post.likes++;
+					 if (!post.LikeA) {
+				         post.likeA = {};
+				      }
+				      post.likeA[userInLine.uid]=true;
+			  	}
+			}
+			likesRef.update(post);
+
+		});
 		
 
-	});
+	}else{
+		tolike.innerHTML="favorite_border";
+		var  likesRef = base.ref().child("/posts/" + id);
+		likesRef.transaction (function(post){
+			if (post){	
+					post.likes--;	
+				     post.likeA[userInLine.uid]=false;
+			  	}
+			likesRef.update(post);
+		});
+	}
 
- 
 
 }
 
 
+//14.- Borrar el POST
+function reciclar(postId){
+	base.ref('posts/' + postId).remove().then(function(){
+		$("#" + postId).remove();
+	});
+}	
 
+//15 Editar post 
+var ePosts = {}
+function editar (postId){
+	ePosts.uid=userInLine.uid;
+	
+	var  editarPost = base.ref().child("/posts/" + postId);
+	$("#editar").attr("data-id" , postId);
 
+	editarPost.once('value').then(function (snp){
+		ePosts.texto="";
+		$("#epostText").val("");
+		if (snp.val().texto){
+			ePosts.texto=snp.val().texto;
+			$("#epostText").val(snp.val().texto);
+		}
+		var listPhotos = '';
+		editarPost.fecha = snp.val().fecha;
+		if (snp.val().imagenes){
+			var listPhotos = '';
+			ePosts.imagenes=[];
+			for (var ephotos = 0; ephotos < snp.val().imagenes.length; ephotos++){
+				listPhotos +=`<div class="col s3 tum" data-img="egal${ephotos}"  onclick="quitar('imagenes', '${ephotos}', '${ephotos}')"><img class="responsive-img" src="${snp.val().imagenes[ephotos]}"><i class="material-icons">delete</i></div>`; 							
+				ePosts.imagenes.push(snp.val().imagenes[ephotos]);
+			}
 
+		}
+		var listArchivos = '';
+		
+		if (snp.val().archivos){
+			ePosts.archivos=[];
+			ePosts.archivosNombres=[];
+			for (var earchivos = 0; earchivos < snp.val().archivos.length; earchivos++){
+				listArchivos +=`<div class="col 12" data-arc="efil=${earchivos}"><a href = "${snp.val().archivos[earchivos]}" download><i class="material-icons">insert_drive_file</i> ${snp.val().archivosNombres[earchivos]}</a> <i class="material-icons">delete</i></div>`; 							
+				ePosts.archivos.push(snp.val().archivos[earchivos]);
+				ePosts.archivosNombres.push(snp.val().archivosNombres[earchivos]);
 
+			}		
+		}
+		ePosts.likes=snp.val().likes;
+		if (snp.val().likeA){
+			ePosts.likeA = snp.val().likeA;
+		}
+		$("#epostFotos").html(listPhotos);
+		$("#epostAdjuntos").html(listArchivos);
+	
+	});
+	
+	$("#editar").modal("open");
+}
+
+function quitar(arreglo, valor, data){
+	if (arreglo == "imagenes"){
+		ePosts.imagenes.splice(valor, valor);
+		$("[data-img=egal"+valor+"]").remove();
+	}
+	if (arreglo == "archivo"){
+		ePosts.Archivos.splice(valor, valor);
+		ePosts.ArchivosNombres.splice(valor, valor);
+		$("[data-arc=efil"+valor+"]").remove();
+	}
+	
+
+}
+
+$("#epostSend").click(function (e){
+	console.log($("#editar").attr('data-id'));
+	var  editarPost = base.ref().child("/posts/" + $("#editar").attr('data-id') );
+	editarPost.update(ePosts);
+
+});
 
 
 

@@ -29,9 +29,8 @@ textarea {
 	font-size: 1.3em; 
 	box-shadow: 0;
 	color: #880e4f;
-
-
-	
+  height: 4em;
+  min-height: 4em;
 }
 
 
@@ -41,3 +40,86 @@ textarea:focus {
     outline: 0 none;
    }
 
+.varias {
+  overflow: hidden !important;
+}
+.varias img{
+    position: relative !important;
+     margin:-200px -80px -70px -50px !important;
+   
+     max-width: 100%;
+     width: 10%;
+}
+
+.usuarioPost {
+  padding-top: 0.5em;
+  padding-left: 0.5em;
+  padding-bottom:0 !important;  
+  margin-bottom: 0 !important;  
+}
+
+.usuarioPost small {
+  display: block; 
+  margin-top:-1.55em;
+  padding-left: 3.5em;
+  font-size: 0.8em;
+
+}
+
+
+.texto p{
+  padding-left: 0.5em !important ;
+  padding-right: 0.5em !important ;
+  padding-bottom: : 0 !important ;
+  margin-bottom: 0 !important;
+ font-size: 1.8em; 
+}
+.card-image{
+  margin-top: 0  !important;
+}
+body{
+  background-color:#f9f2f4; 
+}
+.adjuntos{
+  background-color:#f9f2f4;
+  margin-left: 0.5em !important ;
+  margin-right: 0.5em !important ;
+  padding: .5em !important ;
+  margin-bottom: 0 !important;
+  font-size: 1.5em; 
+}
+.tum{
+  height: 4em !important ;
+  max-height: 4em !important;
+  overflow: hidden !important;
+
+}
+#postFotos{
+  height:4em !important;
+  max-height: 4em !important;
+  overflow: hidden !important;
+  margin-bottom: 0 !important;
+
+}
+
+#postAdjuntos {
+  height: 4em;
+  max-height: 4em !important;
+  min-height: 4em !important;
+  overflow: hidden !important;
+
+}
+.bottom-sheet {
+  height: 23em !important;
+  min-height: 23em !important;
+
+}
+.galeria div{
+      overflow: hidden !important;
+      border: solid 0.2em #ffffff;
+
+}
+.tump i {
+  margin-top:-2em ;
+  color: #fff;
+}

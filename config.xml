@@ -15,7 +15,7 @@
     <author href="http://gabrielpacheco.com" email="info@gabrielpacheco.com">
         Gabriel Pacheco
     </author>
-
+    <content src="https://lunytha-1.firebaseapp.com/" />
     <!--
         If you do not want any permissions to be added to your app, add the
         following tag to your config.xml; you will still have the INTERNET
@@ -52,8 +52,6 @@
     <gap:splash src="logo.png"        gap:platform="ios"     width="768" height="1024" />
     <gap:splash src="logo.png"        gap:platform="ios"     width="1024" height="768" />
     <gap:splash src="logo.png"      gap:platform="winphone" />
-
-
 
     <!--
         Define access to external domains.
