@@ -35,10 +35,17 @@ firebase.initializeApp(config);
 var  Auth = firebase.auth();
 var base = firebase.database();
 var storage = firebase.storage();
+var userInLIne ={}
 //1.1.- Escuchador de cambio en la sesión 
 Auth.onAuthStateChanged(function(user) {
-  if (user) {
-  	$("nav").removeClass("hide")	;
+if (user) {
+  	$("nav").removeClass("hide");
+  	userInLIne.id = user.uid;
+  	userInLIne.nombre= user.displayName;
+  	userInLIne.fotoURL= user.photoURL;
+  	userInLIne.email= user.email;
+  	userInLIne.telefono= user.phoneNumber;
+
   	$(".sidenav-trigger").removeClass("hide");
   	getPerfil(user);
   	if (user.displayName != null ){
@@ -186,8 +193,7 @@ $("#perfil").submit(function(){
 		storage.ref().child("imagenes/userPhoto/" + $("#userId").val()).put(imagenAsubir)
 		.then(function (snap){
 				var urlImage = snap.downloadURL;
-				perfil.imagen = snap.downloadURL;
-				
+				perfil.imagen = snap.downloadURL;		
 				Auth.currentUser.updateProfile({
 					photoURL: urlImage
 				});
@@ -219,6 +225,11 @@ $("#perfil").submit(function(){
 	}).then(function(){
 		M.toast({html: '<span>Tus datos se actualizaron! <i class="material-icons green-text">check_circle</i></span> '});
 	}) 
+
+	if (perfil.imagen == null){
+		perfil.imagen = userInLIne.fotoURL;
+		console.log(perfil.imagen);
+	}
 
 	var guardar = {};
 	guardar["users/" + $("#userId").val()]=perfil; 
@@ -303,54 +314,60 @@ $("#RegistrarConFacebook").click(function (){
 });
 
 
-//10.- Noton enviar post 
-$("#postSend").click(function (){
-	var postData = {
-   			uid: $("#userId").val(),
-		    texto: $("#postText").val(),
-		    starCount: 0
-	};
-	
-
-	if (adjuntos.contPics > 0){
-		postData.totalImagenes = adjuntos.contPics;
-		postData.urlsImagenes = "";
-		for (var i =0; i < adjuntos.pics.length;i++){
-			var img = adjuntos.pics[i];
-			storage.ref().child("imagenes/post/" + img.name).put(img)
-			.then(function (imagenSubida){
-				postData.urlsImagenes += imagenSubida.downloadURL + "";
-			})
-
-			.catch(function (e){
-				 M.toast({html: e.message + ' <i class="material-icons red-text">error</i></span> '});
-			});
-
+//10.- Boton enviar post 
+$("#postSend").click(async function (){
+	if ($("#postText").val() != "" ||  adjuntos.Contfil >0 || adjuntos.contPics>0 ){
+		var postData={};
+		
+		postData.uid = userInLIne.id;
+		postData.texto = $("#postText").val();
+		 if (adjuntos.contPics > 0){
+	 		postData.Imagenes = ""; 	
+		 	for (var i =0; i < adjuntos.contPics;i++ ){
+		 		postData.Imagenes+= await cargarFoto( "posts", adjuntos.pics[i]);
+		 		if (adjuntos.pics[i+1]!= undefined){
+		 			postData.Imagenes+=",";
+		 		}	
+		 	}
 		}
+		var fecha = new Date();
+		postData.fecha = fecha.getDate() + "/" +  fecha.getMonth() + "/" + fecha.getYear(); 
+		var newPostKey = firebase.database().ref().child('posts').push().key;
+		var updates = {};
+
+  		updates['/posts/' + newPostKey] = postData;
+  		firebase.database().ref().update(updates);
+
+  	adjuntos.contPics = 0;
+	adjuntos.Contfil = 0;
+	adjuntos.pics=[];
+	adjuntos.fil=[];
+	$("#postText").val("");
+	$("#postFotos").html("");
+
+
 	}
-
-	if ($("#postText").val() != ""){
-		var nPostId = base.ref().child('posts').push().key;
-		 
- 		var updates = {};
-		  updates['/posts/' + nPostId] = postData;
-		  $("#postText").val("");
-	     return firebase.database().ref().update(updates);
-	}
-
-
-
-
 });
-
- //10.1.- Botones del post 
- //10.1.a.-Boton  Adjuntar imagen 
-	//Objeto para adjuntos 
-	var adjuntos = {}
+	//Objeto para adjuntos
+var adjuntos = {}
 	 adjuntos.contPics = 0;
 	 adjuntos.Contfil = 0;
 	 adjuntos.pics=[];
 	 adjuntos.fil=[];
+
+async function cargarFoto(carpeta, foto){
+	return  await storage.ref().child("imagenes/" +carpeta+"/" + foto.name ).put(foto)
+		.then(function (snap){
+				var URLImage = (snap && snap.downloadURL ) || "nol lo logramos" ;
+				return URLImage;
+		});
+
+}
+
+ //10.1.- Botones del post 
+ //10.1.a.-Boton  Adjuntar imagen 
+ 
+	
 $("#postUpImagen").click(function (){
 	$("#postImagen").click();
 });
@@ -391,46 +408,77 @@ $("#postAcrivos").change(function (e){
 
 var publicaciones = firebase.database().ref('posts/');
 publicaciones.on('child_added', function(data) {
-
 	publicar(data);
 });
 
 function publicar(post){
-	var id = post.val().uid;
-	var publicacion = {};
-	publicacion.id = post.key;
-	publicacion.texto =post.val().texto;
-	firebase.database().ref('/users/' + id).once('value').then(function(snapshot) {
-		publicacion.username = snapshot.val().nombre;
-		publicacion.photoUrl = snapshot.val().imagen;
-		
-		$("#publicaciones").prepend(`
-		  <div class="card ">
-		  		<div class="row">
-					<div class="col s2 avatar">
-						<img src="${publicacion.photoUrl}" alt="${publicacion.username}" class="responsive-img circle">
-					</div>
-					<div class="col s8 ">
-						<b>${publicacion.username} </b>
-						<br> <small><span class="chip white">dd/mm/aaaa</span></small>
-
-
-					</div>
-		  		</div>    			
-	        <div class="card-content">
-
-	          
-	          <p>${publicacion.texto}</p>
-	        </div>
-	        <div class="card-action">
-	          <a href="#">This is a link</a>
-	          <a href="#">This is a link</a>
-	        </div>
-	      </div>
-		`)	;
- 	});
-
 	
+	 firebase.database().ref('/users/' + post.val().uid).once('value')
+	.then(function(snapshot) {
+  			var userPost = {};
+  			userPost.nombre = snapshot.val().nombre;
+  			userPost.photoURL = snapshot.val().imagen;
+
+  			if (post.val().Imagenes ){
+  				var urls = post.val().Imagenes.split(",");
+  				console.log(urls.length);
+  				if (urls.length>1){
+  					var mostrarImagen = `<div class="row">`;
+  					for (var w=0; w<= urls.length;w++){
+		  					mostrarImagen+=`
+		  					<div class="col s6">
+		  						<img src="${urls[w]}" class="responsive-img">
+		  					</div>
+		  					
+		  				</div>`;
+	  				}
+	  				mostrarImagen+= `</div>`;
+
+
+  				}else {
+  				var mostrarImagen = `<div class="card-image">
+  					<img src="${urls[0]}" class="responsive-img">
+  				</div>`;
+
+  				}
+  			
+
+
+  			}else{
+  				mostrarImagen = "";
+  			}
+
+
+
+  			$("#publicaciones").prepend(`
+  				<div>
+
+			    <div class="col s12 ">
+			      <div class="card">
+				      <div class="chip white">
+					    <img src="${userPost.photoURL}" alt="${userPost.nombre}">
+					    ${userPost.nombre}<small>post.val().fecha</small>
+
+					    
+					 </div>	
+					  ${mostrarImagen}
+					<div class="card-content">
+			          <p>${post.val().texto}</p>
+			          
+			        </div>
+					
+				
+
+			      </div>
+			    </div>
+			  </div>
+				
+ 			`);							
+		
+
+	});
+
+ 
 
 }
 
