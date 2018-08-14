@@ -224,10 +224,16 @@
             <div  id = "publicaciones"></div>
             <div id="acciones" class="modal bottom-sheet">
               <div class="modal-content">
+             
+                    
+                
                 <div id = "postCip" class="chip">
-                  <img id ="postImage" src="" alt="">            
+
+                  <img id ="postImage" src="" alt="">
+
                 </div>
-                <textarea id ="postText" placeholder="¿Que quieres informar?"></textarea>
+                 <a id = "postSend" href="#" class="modal-close " data-aciones="true" >Publicar <i class="material-icons right-align">send</i></a>
+                <textarea id ="postText" placeholder="¿Que quieres informar?" data-color=""></textarea>
                 <div id="postFotos" class="row">&nbsp;</div>
                 <input type="file" id="postImagen" class="hide" accept="image/*">
                 <div id ="postAdjuntos" class="row">&nbsp;</div>           
@@ -236,9 +242,16 @@
                   <div class="col s2" id = "postUpImagen"><i class="material-icons #880e4f pink-text darken-4  ">add_photo_alternate</i></div>
                   <div class="col s2" id = "postUpArchivo"><i class="material-icons  green-text ">attach_file</i></div>
                   <div class="col s2" id = "postColor"><i class="material-icons  blue-text">color_lens</i></div>
-                  <div class="right-align"> 
-                    <a id = "postSend" href="#" class="modal-close waves-effect waves-green btn-flat disable" data-aciones="true" >Publicar <i class="material-icons">send</i></a>
-                  </div> 
+                  <div class="col s6 hide" id ="postColores">
+                      <div class="row">
+                        <div class="col s2 #4caf50 green" data-color="textoVerde">&nbsp;</div>
+                        <div class="col s2 #2196f3 blue" data-color="textoAzul">&nbsp;</div>
+                        <div class="col s2 #880e4f pink darken-4" data-color="textoRojo">&nbsp;</div>
+                        <div class="col s2 #ff9800 orange" data-color="textoNaranja">&nbsp;</div>
+                        <div class="col s2 white red-text" data-color= "null" ><b>X</b></div>
+                      </div>
+                  </div>
+
                 </div>
               </div>
             </div>
@@ -248,7 +261,8 @@
                 <div id = "epostCip" class="chip">
                   <img id ="epostImage" src="" alt="">            
                 </div>
-                <textarea id ="epostText" placeholder="¿Que quieres informar?"></textarea>
+                <a id = "epostSend"  class="modal-close" data-aciones="true" >Guardar <i class="material-icons">send</i></a>
+                <textarea id ="epostText" placeholder="¿Que quieres informar?" data-color="null"></textarea>
                 <div id="epostFotos" class="row">&nbsp;</div>
                 <input type="file" id="epostImagen" class="hide" accept="image/*">
                 <div id ="epostAdjuntos" class="row">&nbsp;</div>           
@@ -257,9 +271,15 @@
                   <div class="col s2" id = "epostUpImagen"><i class="material-icons #880e4f pink-text darken-4 ">add_photo_alternate</i></div>
                   <div class="col s2" id = "epostUpArchivo"><i class="material-icons  green-text ">attach_file</i></div>
                   <div class="col s2" id = "epostColor"><i class="material-icons  blue-text">color_lens</i></div>
-                  <div class="right-align"> 
-                    <a id = "epostSend" href="#" class="modal-close waves-effect waves-green btn-flat disable" data-aciones="true" >Guardar <i class="material-icons">send</i></a>
-                  </div> 
+                  <div class="col s6 hide" id ="epostColores">
+                      <div class="row">
+                        <div class="col s2 #4caf50 green" data-color="textoVerde">&nbsp;</div>
+                        <div class="col s2 #2196f3 blue" data-color="textoAzul">&nbsp;</div>
+                        <div class="col s2 #880e4f pink darken-4" data-color="textoRojo">&nbsp;</div>
+                        <div class="col s2 #ff9800 orange" data-color="textoNaranja">&nbsp;</div>
+                        <div class="col s2 white red-text" data-color= "null" ><b>X</b></div>
+                      </div>
+                  </div>
                 </div>
               </div>
             </div>

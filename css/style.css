@@ -23,7 +23,7 @@ body{
   width: 100%;
  
 }
-textarea {
+.modal textarea {
 	border: solid 0 #999;
 	width: 100%;
 	font-size: 1.3em; 
@@ -34,7 +34,7 @@ textarea {
 }
 
 
-textarea:focus {
+.modal textarea:focus {
     border-color: rgb(255, 255, 255);
     box-shadow: 0 0px 0px rgba(229, 103, 23, 0.075)inset, 0 0 0px rgba(255,144,0,0.6);
     outline: 0 none;
@@ -65,7 +65,6 @@ textarea:focus {
   font-size: 0.8em;
 
 }
-
 
 .texto p{
   padding-left: 0.5em !important ;
@@ -123,3 +122,69 @@ body{
   margin-top:-2em ;
   color: #fff;
 }
+
+.comentarios textarea {
+	border: solid 0 #999;
+	width: 100%;
+	box-shadow: 0;
+	color: #880e4f;
+	height:  2em !important;
+
+  
+  
+}
+
+.comentarios textarea:focus {
+    border-color: rgb(255, 255, 255);
+    box-shadow: 0 0px 0px rgba(229, 103, 23, 0.075)inset, 0 0 0px rgba(255,144,0,0.6);
+    outline: 0 none;
+
+   }
+.comentarios center{
+ -moz-border-radius: 1em;
+ -webkit-border-radius:1em;
+ background: #f9f2f4;
+ margin: 0.5em;
+}
+.comentarios .com{
+	margin-left: 1em;
+	margin-right: 1em;
+	margin-bottom: 1em;
+	background: #f9f2f4;
+	-moz-border-radius: 1em;
+ -webkit-border-radius:1em;
+
+}
+.comentarios .texto-comentario{
+	margin-left: 3em;
+	margin-top: -1em !important;
+
+}
+#postColores .active {
+	border: solid 1px  #f9f2f4;
+}
+.textoVerde {
+	color:#000000 !important;
+	background-color: #4caf50 ;
+	text-align: center;
+
+}
+.textoAzul {
+	color:#000000 !important;
+	background: #2196f3;
+	text-align: center;
+}
+.textoNaranja {
+	color:#000000 !important;
+	background: #ff9800 ;
+	text-align: center;
+}
+.textoRojo {
+	color:#FFFFFF !important;
+	background: #880e4f  ;
+	text-align: center;
+}
+.fondo {
+	height:  20em;
+	text-align: center !important;
+} 

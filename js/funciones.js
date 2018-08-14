@@ -44,8 +44,9 @@ var storage = firebase.storage();
 //1.1.- Escuchador de cambio en la sesión 
 
 var userInLine = {}
-var config = {}
-config.acceso = 3;
+var config2 = {}
+config2.acceso = 3;
+config2.primeraCarga = true;
 Auth.onAuthStateChanged(function(user) {
   if (user) {
   
@@ -158,8 +159,8 @@ function getPerfil(usuario){
 			$("#telefono").val( snapshot.val().telefono);
 		 }
 		
-		if (snapshot.val().permisos >= config.acceso){
-				
+		if (snapshot.val().permisos >= config2.acceso){
+				userInLine.scopes = snapshot.val().permisos;
    				$("#rol").parent().addClass('hide')
    				$("#soy").val(snapshot.val().rol);
  				$("#soy").attr("data-scopes", snapshot.val().permisos);	
@@ -365,6 +366,7 @@ $("#postSend").click(async function (){
 			postData.imagenes=[];
 			for (var i = 0; i < adjuntos.pics.length; i++ ){
 				var URLimagen = await cargarArchivos("imagenes/posts" , adjuntos.pics[i]);
+				console.log("subiendo foto " + i);
 				postData.imagenes.push(URLimagen);
 			}
 		}
@@ -372,7 +374,7 @@ $("#postSend").click(async function (){
 			postData.archivos=[];
 			postData.archivosNombres=[];
 			for (var f = 0 ; f < adjuntos.fil.length; f++){
-				console.log(adjuntos.fil[f].name);
+				
 				var URLarchivo = await cargarArchivos("archivos/posts" , adjuntos.fil[f]);
 				postData.archivos.push(URLarchivo);
 				postData.archivosNombres.push(adjuntos.fil[f].name);
@@ -384,25 +386,36 @@ $("#postSend").click(async function (){
 		}else{
 			postData.texto=""
 		}
+		if ($("#postText").hasClass("textoAzul") || $("#postText").hasClass("textoVerde") || $("#postText").hasClass("textoRojo") || $("#postText").hasClass("textoNaranja") ){
+			postData.textoColor = $("#postText").attr("data-color") ;
+			
+		}
+	
 
 		var fecha = new Date();
 		postData.fecha = fecha; 
 		postData.likes=0;
 
-		adjuntos.contPics = 0;
+	     adjuntos.contPics = 0;
 		 adjuntos.Contfil = 0;
 		 adjuntos.pics = [];
 		 adjuntos.fil = [];
+		
 		 $("#postText").html("");
 		 $("#postText").val("");
 		 $("#postAdjuntos").html("");
 		 $("#postFotos").html("");
+	 	$("#postText").removeClass("textoVerde");
+		$("#postText").removeClass("textoAzul");
+		$("#postText").removeClass("textoNaranja");
+		$("#postText").removeClass("textoRojo");
 
 		var newPostKey = firebase.database().ref().child('posts').push().key;
 		var updates = {};
 		
 		updates['/posts/' + newPostKey] = postData;
 		return firebase.database().ref().update(updates);
+
 	}
 
 	 
@@ -413,7 +426,6 @@ $("#postSend").click(async function (){
 function cargarArchivos (ruta, archivo){
 	var postArchivo = storage.ref().child( ruta + "/" + archivo.name);
 	return postArchivo.put (archivo).then(function (snap){
-
 		return snap.downloadURL;
 	});
 
@@ -427,14 +439,16 @@ $("#postUpImagen").click(function (){
 $("#postImagen").change(function (e){
 	var archivos = e
 		var pic = archivos.target.files[0] ;
-		var src = URL.createObjectURL(pic)
+		var src = URL.createObjectURL(pic);
 		if (pic){
 			$("#postFotos").append(`
 			<div class="col s3 tum" ><img class="responsive-img" src="${src}" ></div>`); 
 			adjuntos.pics[adjuntos.contPics]=pic;
 			adjuntos.contPics+=1;
+			pic= null;
+			src= null;
 		}
-	
+
 });
 
  //10.1.b.-Boton  Adjuntar ARCHIVO
@@ -464,12 +478,20 @@ $("#postText").on('keyup', function (){
 
 function cargarPost(){
 	var publicaciones = firebase.database().ref('posts/');
-	publicaciones.on('child_added', function(data){
-		publicar(data);
-	})
+	publicaciones.once("value", function (p){
 	
+	})
+
+	publicaciones.on('child_changed', function (data){
+		publicar(data, "change");
+	});
+	publicaciones.on ('child_added', function (data){
+		
+		publicar(data, "add");
+	});
 }
-function publicar(post){
+
+function publicar(post, accion ){
 	var id = post.val().uid;
 	var publicacion = {};
 	publicacion.id = post.key;
@@ -484,7 +506,17 @@ function publicar(post){
 			postLike +=`<i class="material-icons" id = "like${publicacion.id}" onclick="like('${publicacion.id}',${post.val().likes}) " >favorite_border</i>` ;	
 			
 		}else{
-			postLike +=`<i class="material-icons #ff80ab-text pink-text accent-2" id = "like${publicacion.id}" onclick="like('${publicacion.id}',${post.val().likes}) " >favorite</i>` ;		
+			postLike +=`<i class="material-icons #ff80ab-text pink-text accent-2" id = "like${publicacion.id}" onclick="like('${publicacion.id}',${post.val().likes}) " >favorite</i> ` ;		
+		}
+		var totalLikes = ``;
+		if (post.val().likes > 0 ){
+			totalLikes = ` <b> ${post.val().likes} me gusta </b>`; 
+		}
+
+
+		var totalComentarios =``;
+		if (post.val().comentarios){
+			totalComentarios +=`<b>` +Object.keys(post.val().comentarios).length + ` comentarios </b> `;
 		}
 		if (post.val().archivos ){
 			if (post.val().archivos.length == 1 ){
@@ -493,7 +525,6 @@ function publicar(post){
 
 					postAdjuntos+= `<a data-aciones="true" href="${post.val().archivos[filer]}" ><i class="material-icons">description</i>${post.val().archivosNombres[filer]}</a>`;
 				}
-
 				postAdjuntos+= `</div>`;				
 			}
 		}
@@ -505,52 +536,124 @@ function publicar(post){
 			        </div>`;
 			}
 			if (post.val().imagenes.length  == 2){
-				postImagenes +=	`<div class="row galeria">`;
-				var img1= new Image();
-				img1.src = post.val().imagenes[0];
-				var img2 = new Image();
-				img2.src = post.val().imagenes[1];
-				var height = 200;
+				postImagenes +=	`<div class="row galeria card-image">`;
+
+				let height = 200;
 						postImagenes +=	`<div class="col s6" style="background-image: url('${post.val().imagenes[0]}'); no-repeat;background-size: cover; height: ${height}px !important; background-position: center center;" >`;
 						postImagenes +=	`</div>`;
 						postImagenes +=	`<div class="col s6" style="background-image: url('${post.val().imagenes[1]}'); no-repeat;background-size: cover; height: ${height}px !important; background-position: center center;" >`;
 						postImagenes +=	`</div>`;	
 						postImagenes +=  `</div>`;
 			}
+			if (post.val().imagenes.length  == 3){
+							postImagenes +=
+					`<div class="card-image">
+			          <img src="${post.val().imagenes[0]}">		          
+			        </div>`;
+					     postImagenes +=	`<div class="row galeria card-image">`;
+						let height = 150;
+						postImagenes +=	`<div class="col s6" style="background-image: url('${post.val().imagenes[1]}'); no-repeat;background-size: cover; height: ${height}px !important; background-position: center center;" >`;
+						postImagenes +=	`</div>`;
+						postImagenes +=	`<div class="col s6" style="background-image: url('${post.val().imagenes[2]}'); no-repeat;background-size: cover; height: ${height}px !important; background-position: center center;" >`;
+						postImagenes +=	`</div>`;	
+						postImagenes +=  `</div>`;
+			}
+			if (post.val().imagenes.length  > 3){
+
+					     postImagenes +=	`<div class="row galeria card-image">`;
+						let height = 200;
+						postImagenes +=	`<div class="col s6" style="background-image: url('${post.val().imagenes[0]}'); no-repeat;background-size: cover; height: ${height}px !important; background-position: center center;" >`;
+						postImagenes +=	`</div>`;
+						postImagenes +=	`<div class="col s6" style="background-image: url('${post.val().imagenes[1]}'); no-repeat;background-size: cover; height: ${height}px !important; background-position: center center;" >`;
+						postImagenes +=	`</div>`;
+						postImagenes +=	`<div class="col s6" style="background-image: url('${post.val().imagenes[2]}'); no-repeat;background-size: cover; height: ${height}px !important; background-position: center center;" >`;
+						postImagenes +=	`</div>`;
+						if (post.val().imagenes.length  > 4){
+							postImagenes +=	`<div class="col s6" style="background-image: url('${post.val().imagenes[3]}'); no-repeat;background-size: cover; height: ${height}px !important; background-position: center center;" >
+							<center class="pink-text"><h2><b> + ${post.val().imagenes.length-4} </b></h2></center>
+						`;
+						}else{
+							postImagenes +=	`<div class="col s6" style="background-image: url('${post.val().imagenes[3]}'); no-repeat;background-size: cover; height: ${height}px !important; background-position: center center;">`;							
+						}
+						postImagenes +=	`</div>`;	
+						postImagenes +=  `</div>`;
+			}
+
+		}
+		var postMenus=``
+	
+		if(userInLine.scopes >= config2.acceso){
+		 	 postMenus+= `<a class='dropdown-trigger right  blue-grey-text' data-aciones="true" href='#' data-target='menu${publicacion.id}'><i class="material-icons">more_vert</i></a>		      	
+			  <ul id='menu${publicacion.id}' class='dropdown-content blue-grey-tex' >
+			    <li><a href="#!" data-aciones="true" onclick = "reciclar('${publicacion.id}' );" class="blue-grey-text"><i class="material-icons ">delete_forever</i>Borrar</a></li>
+			    <li><a href="#!" data-aciones="true" onclick = "editar ('${publicacion.id}')" class="blue-grey-text"><i class="material-icons blue-grey-text">edit</i>Editar</a></li>		
+			  </ul>`;
+		}
+		var comentario =``;
+		comentario +=`<div id = "comentarios${publicacion.id}" class= "comentarios hide" >`;                      
+		
+		if (post.val().comentarios){
+		var comentarios = base.ref().child("/posts/" + publicacion.id + "/comentarios");
+			comentarios.once("value", function (comen){
+				comen.forEach(function(comenC){
+				comentario+=`<div id ="com${comenC.key}" class="com grey lighten-2">
+								<div  class="chip #bdbdbd">
+				                  <img  src="${comenC.val().imagen}" alt="${comenC.val().nombre}">            
+									<b>${comenC.val().nombre}</b>	
+
+				                </div>
+			                	<div class="texto-comentario">${comenC.val().comentario}</div>
+							</div>`;
+				})	
+				
+			} );	
+		
+		}
+		comentario+=`<center class="row "> 
+                  <textarea class="col s9" id="textComentario${publicacion.id}" onkeyup="up('${publicacion.id}')"  placeholder = "Escribe un comentario"></textarea><i onclick="addComentario('${publicacion.id}')" class="material-icons right-align col s3 hide">send</i>  	
+                 </center>
+		</div> `;
+		var text ='';
+		if (!post.val().textoColor ){
+			text+=  `<div class="texto"><p class="flow-text">${post.val().texto}</p></div>`;
+		}else{
+			text+=  `<div class="valign-wrapper   ${post.val().textoColor} fondo"><h4 class="center-align">${post.val().texto}</h4></div>`;
+
 		}
 		var objetoPublicacion = `
 			     <div id = "${publicacion.id}" class="card" >
 			      	<div class="usuarioPost"> 		      	
-			      	 <a class='dropdown-trigger right  blue-grey-text' data-aciones="true" href='#' data-target='menu${publicacion.id}'><i class="material-icons">more_vert</i></a>
-			      	
-						  <ul id='menu${publicacion.id}' class='dropdown-content blue-grey-tex' >
-						    <li><a href="#!" data-aciones="true" onclick = "reciclar('${publicacion.id}' );" class="blue-grey-text"><i class="material-icons ">delete_forever</i>Borrar</a></li>
-						    <li><a href="#!" data-aciones="true" onclick = "editar ('${publicacion.id}')" class="blue-grey-text"><i class="material-icons blue-grey-text">edit</i>Editar</a></li>		
-						  </ul>
+			     		${postMenus}
 	  	     		  <div class="chip white">
 					    <img src="${publicacion.photoUrl}" alt="${publicacion.username}" >
 					    <b>${publicacion.username}</b>
 					  </div>
-					    <small>${calcularFecha(post.val().fecha)}</small>
-							
-					  
+					    <small>${calcularFecha(post.val().fecha)}</small>			  
 					</div>
-
-					  
-			        <div class="texto">
-			          <p class="flow-text">${post.val().texto}</p>
-			        </div>
+			        ${text}		        
 			        ${postImagenes}
 					${postAdjuntos}	
 					  <div class="card sticky-action">
  						  <div class="card-action row">
- 						 	 <div class="col s6">${postLike}</div>	
- 						 	 <div class="col s6 right-align"><i class="material-icons">chat_bubble_outline</i></div>						  
- 						  </div>  
+ 						 	 <div class="col s6">${postLike} ${totalLikes}</div>	
+ 						 	 <div class="col s6 right-align">${totalComentarios}<i class="material-icons" onclick="toogleComentarios('${publicacion.id}')" >chat_bubble_outline</i></div>						  
+ 						  </div> 
+ 						    ${comentario} 
  					  </div>
+ 					
 			      </div>
 		`;
-		$("#publicaciones").prepend(objetoPublicacion);
+	
+		if (accion == "change"){
+			$("#"+ publicacion.id).replaceWith(objetoPublicacion);
+		}
+		if (accion == "init"){
+			$("#publicaciones").append(objetoPublicacion);
+
+		}
+		if (accion == "add"  && config2.primeraCarga==true){
+			$("#publicaciones").append(objetoPublicacion);		
+		}
 		$('.dropdown-trigger').dropdown();
 
  	});
@@ -656,6 +759,10 @@ function editar (postId){
 			ePosts.texto=snp.val().texto;
 			$("#epostText").val(snp.val().texto);
 		}
+		if (snp.val().textoColor){
+			$("#epostText").addClass(snp.val().textoColor);
+			ePosts.textoColor = snp.val().textoColor;
+		}
 		var listPhotos = '';
 		editarPost.fecha = snp.val().fecha;
 		if (snp.val().imagenes){
@@ -705,24 +812,143 @@ function quitar(arreglo, valor, data){
 
 }
 
-$("#epostSend").click(function (e){
-	console.log($("#editar").attr('data-id'));
+$("#epostSend").click(async function (e){
+
+	ePosts.texto = $("#epostText").val();
+	if (nimagen || nimagen.length > 0){
+		for (let s = 0 ; s < nimagen.length ; s++){
+			let nFoto = await cargarArchivos ("/imagenes/post/", nimagen[s]);
+			nimagen= [];
+			ePosts.imagenes.push(nFoto);
+		}
+	}
+
+		if (nadjunto|| nadjunto.length > 0){
+		for (let j = 0 ; j < nimagen.length ; j++){
+			let nAdjunto = await cargarArchivos ("/archivos/post/", nadjunto[j]);
+			nadjunto= [];
+			ePosts.archivos.push(nAdjunto);
+			ePosts.archivosNombres.push(nadjuntoNombres[j]);
+		}
+	}
+
+	ePosts.textoColor=$("#epostText").attr("data-color");
 	var  editarPost = base.ref().child("/posts/" + $("#editar").attr('data-id') );
 	editarPost.update(ePosts);
 
 });
 
 
+$("#epostUpImagen").click(function (){
+	$("#epostImagen").click();
+});
+var nimagen = [];
+$("#epostImagen").change(function (e){
+	
+	var archivos = e
+		var pic = archivos.target.files[0] ;
+		var src = URL.createObjectURL(pic);
+		if (pic){
+			$("#epostFotos").append(`
+			<div class="col s3 tum" ><img class="responsive-img" src="${src}" ></div>`); 
+			nimagen.push(archivos.target.files[0]);		
+			pic= null;
+			src= null;
+		}
 
+});
+$("#epostUpArchivo").click(function (){
+	$("#epostAcrivos").click();
+});
+var nadjunto=[]
+var nadjuntoNombres=[];
 
+$("#epostAcrivos").change(function (we){
+	let archi =$(this).get(0).files;
+		if (archi){
+			
+			$("#epostAdjuntos").append(`
+			<div class="col s12" ><i class="material-icons green-text">insert_drive_file</i> ${archi[0].name} </div>`); 
+			 nadjunto.push(archi[0]);
+		     nadjuntoNombres.push(archi[0].name);
+		}
+});
 
+function up (e){
+	if ($("#textComentario"+e).val() != ""){
+	$("#comentarios"+ e +" > center > i" ).removeClass("hide");
 
+	}else{
+		$("#comentarios"+ e +" > center > i" ).addClass("hide");
+	}
+}
+function addComentario(pid){
+	let  toComent = base.ref().child("/posts/" + pid + "/comentarios");
+	let comentario = {}
+	let nComentId = firebase.database().ref().child('posts/'+pid+'/comentarios/').push().key
+	comentario.uid = userInLine.uid;
+	comentario.nombre = userInLine.nombre;
+	comentario.imagen = userInLine.imagen;
+	comentario.comentario = $("#textComentario" + pid).val();
+	let updates ={}
+	updates['/posts/' + pid + "/comentarios/" + nComentId  ]= comentario;
+	base.ref().update(updates);
+}
 
+function toogleComentarios(id){
+	if ($("#comentarios" + id).hasClass("hide")){
+		$("#comentarios" + id).removeClass("hide")
+	}else{
+		$("#comentarios" + id).addClass("hide")
+	}
+	
+}
 
+$("#postColores .col ").click(function(event) {
+	$("#postColores .col").removeClass("active");	
+	$("#postText").removeClass("textoVerde");
+	$("#postText").removeClass("textoAzul");
+	$("#postText").removeClass("textoNaranja");
+	$("#postText").removeClass("textoRojo");
+	$(this).addClass("active");
+	$("#postText").addClass($(this).attr("data-color"));
+	$("#postText").attr("data-color",$(this).attr("data-color") );
+});
+$("#postColor").click(function (){
+	if ($("#postColores").hasClass("hide")){
+		$("#postColores").removeClass("hide");
+	}else{
+		$("#postColores").addClass("hide");
+		$("#postText").removeClass("textoVerde");
+		$("#postText").removeClass("textoAzul");
+		$("#postText").removeClass("textoNaranja");
+		$("#postText").removeClass("textoRojo");
 
+	}
+});
 
+$("#epostColores .col ").click(function(event) {
+	console.log($(this).attr("data-color"));
+	$("#epostColores .col").removeClass("active");	
+	$("#epostText").removeClass("textoVerde");
+	$("#epostText").removeClass("textoAzul");
+	$("#epostText").removeClass("textoNaranja");
+	$("#epostText").removeClass("textoRojo");
+	$(this).addClass("active");
+	$("#epostText").addClass($(this).attr("data-color"));
+	$("#epostText").attr("data-color",$(this).attr("data-color") );
+});
+$("#epostColor").click(function (){
+	if ($("#epostColores").hasClass("hide")){
+		$("#epostColores").removeClass("hide");
+	}else{
+		$("#epostColores").addClass("hide");
+		$("#epostText").removeClass("textoVerde");
+		$("#epostText").removeClass("textoAzul");
+		$("#epostText").removeClass("textoNaranja");
+		$("#epostText").removeClass("textoRojo");
 
-
-
+	}
+});
 
 
