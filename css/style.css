@@ -188,3 +188,7 @@ body{
 	height:  20em;
 	text-align: center !important;
 } 
+.fondo h4 {
+  width: 100%;
+  text-align: center !important;
+}

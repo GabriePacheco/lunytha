@@ -41,6 +41,9 @@ firebase.initializeApp(config);
 var  Auth = firebase.auth();
 var base = firebase.database();
 var storage = firebase.storage();
+const messaging1 = firebase.messaging();
+
+
 //1.1.- Escuchador de cambio en la sesión 
 
 var userInLine = {}
@@ -60,6 +63,7 @@ Auth.onAuthStateChanged(function(user) {
   		userInLine.imagen = user.photoURL;
   		userInLine.telefono = user.phoneNumber;
   		cargarPost();
+  		activarMensajeria()
   	}else{
   		navegacion("#cuenta");
   	}
@@ -282,6 +286,9 @@ $("#login").submit(function (){
 //9.-  Login con facebook
 $("#loginConFacebook").click(function (){
 		var provider = new firebase.auth.FacebookAuthProvider();
+		provider.setCustomParameters({
+		  'display': 'popup'
+		});
 		firebase.auth().signInWithPopup(provider).then(function(result) {
 	  	var token = result.credential.accessToken;
 	    var user = result.user;
@@ -295,7 +302,7 @@ $("#loginConFacebook").click(function (){
 	  var email = error.email;
 	 
 	  var credential = error.credential;
-	  M.toast({html: error.message + ' <i class="material-icons red-text">error</i></span> '});
+	    M.toast({html: error.message + ' <i class="material-icons red-text">error</i></span> '});
 	 
 	});
 });
@@ -519,14 +526,14 @@ function publicar(post, accion ){
 			totalComentarios +=`<b>` +Object.keys(post.val().comentarios).length + ` comentarios </b> `;
 		}
 		if (post.val().archivos ){
-			if (post.val().archivos.length == 1 ){
+			
+			for (var filer = 0; filer <  post.val().archivos.length; filer++){
 				postAdjuntos+= `<div class= "adjuntos">`;
-				for (var filer = 0; filer <  post.val().archivos.length; filer++){
-
-					postAdjuntos+= `<a data-aciones="true" href="${post.val().archivos[filer]}" ><i class="material-icons">description</i>${post.val().archivosNombres[filer]}</a>`;
-				}
+				postAdjuntos+= `<a data-aciones="true" href="${post.val().archivos[filer]}" ><i class="material-icons">description</i>${post.val().archivosNombres[filer]}</a>`;
 				postAdjuntos+= `</div>`;				
 			}
+			
+			
 		}
 		if (post.val().imagenes){
 			if (post.val().imagenes.length  == 1){
@@ -617,7 +624,7 @@ function publicar(post, accion ){
 		if (!post.val().textoColor ){
 			text+=  `<div class="texto"><p class="flow-text">${post.val().texto}</p></div>`;
 		}else{
-			text+=  `<div class="valign-wrapper   ${post.val().textoColor} fondo"><h4 class="center-align">${post.val().texto}</h4></div>`;
+			text+=  `<div class="valign-wrapper ${post.val().textoColor} fondo center-align"><h4 class="center-align">${post.val().texto}</h4></div>`;
 
 		}
 		var objetoPublicacion = `
@@ -761,6 +768,7 @@ function editar (postId){
 		}
 		if (snp.val().textoColor){
 			$("#epostText").addClass(snp.val().textoColor);
+			$("#epostText").attr("data-color", snp.val().textoColor);
 			ePosts.textoColor = snp.val().textoColor;
 		}
 		var listPhotos = '';
@@ -774,13 +782,13 @@ function editar (postId){
 			}
 
 		}
-		var listArchivos = '';
+		var listArchivos = 	``;
 		
 		if (snp.val().archivos){
 			ePosts.archivos=[];
 			ePosts.archivosNombres=[];
 			for (var earchivos = 0; earchivos < snp.val().archivos.length; earchivos++){
-				listArchivos +=`<div class="col 12" data-arc="efil=${earchivos}"><a href = "${snp.val().archivos[earchivos]}" download><i class="material-icons">insert_drive_file</i> ${snp.val().archivosNombres[earchivos]}</a> <i class="material-icons">delete</i></div>`; 							
+				listArchivos +=`<div class="col 12"  data-arc="efil${earchivos}" onclick="quitar('archivo', '${earchivos}', '${earchivos}')" ><span href = "${snp.val().archivos[earchivos]}" data-aciones="true" ><i class="material-icons">insert_drive_file</i> ${snp.val().archivosNombres[earchivos]}</span> <i class="material-icons">delete</i></div>`; 							
 				ePosts.archivos.push(snp.val().archivos[earchivos]);
 				ePosts.archivosNombres.push(snp.val().archivosNombres[earchivos]);
 
@@ -792,6 +800,7 @@ function editar (postId){
 		}
 		$("#epostFotos").html(listPhotos);
 		$("#epostAdjuntos").html(listArchivos);
+
 	
 	});
 	
@@ -804,11 +813,11 @@ function quitar(arreglo, valor, data){
 		$("[data-img=egal"+valor+"]").remove();
 	}
 	if (arreglo == "archivo"){
-		ePosts.Archivos.splice(valor, valor);
-		ePosts.ArchivosNombres.splice(valor, valor);
+
+		ePosts.archivos.splice(valor, valor);
+		ePosts.archivosNombres.splice(valor, valor);
 		$("[data-arc=efil"+valor+"]").remove();
 	}
-	
 
 }
 
@@ -816,25 +825,51 @@ $("#epostSend").click(async function (e){
 
 	ePosts.texto = $("#epostText").val();
 	if (nimagen || nimagen.length > 0){
+		if (!ePosts.imagenes){
+			ePosts.imagenes=[];
+		}
 		for (let s = 0 ; s < nimagen.length ; s++){
 			let nFoto = await cargarArchivos ("/imagenes/post/", nimagen[s]);
-			nimagen= [];
 			ePosts.imagenes.push(nFoto);
+		
 		}
+		nimagen= [];
 	}
 
-		if (nadjunto|| nadjunto.length > 0){
-		for (let j = 0 ; j < nimagen.length ; j++){
-			let nAdjunto = await cargarArchivos ("/archivos/post/", nadjunto[j]);
-			nadjunto= [];
+	if (nadjunto|| nadjunto.length > 0){
+		if (!ePosts.archivos){
+			ePosts.archivos=[];
+			ePosts.archivosNombre=[];
+		}
+		for (let j = 0 ; j < nadjunto.length ; j++){
+			let nAdjunto = await cargarArchivos ("/archivos/post/", nadjunto[j]);	
+			console.log("\n DIRECION Archivo Cargado : " +  nAdjunto);
 			ePosts.archivos.push(nAdjunto);
+			console.log("\n Nombre Archivo Cargado : " +  nAdjunto);
 			ePosts.archivosNombres.push(nadjuntoNombres[j]);
+		
 		}
-	}
+			nadjunto= [];
 
-	ePosts.textoColor=$("#epostText").attr("data-color");
+	}
+	if($("#epostText").attr("data-color") != "null" ){
+		ePosts.textoColor=$("#epostText").attr("data-color");
+	}else{
+		ePosts.textoColor=false;
+	}
 	var  editarPost = base.ref().child("/posts/" + $("#editar").attr('data-id') );
-	editarPost.update(ePosts);
+	editarPost.update(ePosts).then (
+		function (){
+			ePosts={}
+			ePosts.texto ="";
+			ePosts.imagenes ="";
+			ePosts.archivos=[];
+			ePosts.archivosNombres=[];
+			ePosts.textoColor=null;
+			$("#epostText").attr("data-color", null);
+
+		}
+	);
 
 });
 
@@ -857,6 +892,7 @@ $("#epostImagen").change(function (e){
 		}
 
 });
+
 $("#epostUpArchivo").click(function (){
 	$("#epostAcrivos").click();
 });
@@ -865,8 +901,7 @@ var nadjuntoNombres=[];
 
 $("#epostAcrivos").change(function (we){
 	let archi =$(this).get(0).files;
-		if (archi){
-			
+		if (archi){		
 			$("#epostAdjuntos").append(`
 			<div class="col s12" ><i class="material-icons green-text">insert_drive_file</i> ${archi[0].name} </div>`); 
 			 nadjunto.push(archi[0]);
@@ -951,4 +986,9 @@ $("#epostColor").click(function (){
 	}
 });
 
-
+function activarMensajeria(){
+	messaging1.requestPermission()
+	.then(()=> messaging1.getToken())
+	.then((tken)=> console.log(tken))
+	.catch((e)=> console.log("ocurri un erro" + e));
+}
