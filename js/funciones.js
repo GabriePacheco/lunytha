@@ -42,8 +42,7 @@ var  Auth = firebase.auth();
 var base = firebase.database();
 var storage = firebase.storage();
 const messaging1 = firebase.messaging();
-
-
+messaging1.onTokenRefresh(manejadorDeTokens);
 //1.1.- Escuchador de cambio en la sesión 
 
 var userInLine = {}
@@ -989,6 +988,17 @@ $("#epostColor").click(function (){
 function activarMensajeria(){
 	messaging1.requestPermission()
 	.then(()=> messaging1.getToken())
-	.then((tken)=> console.log(tken))
+	.then((tken)=> manejadorDeTokens () )
 	.catch((e)=> console.log("ocurri un erro" + e));
+}
+
+function manejadorDeTokens (){
+	return messaging1.getToken()
+	.then((tken)=> {
+		base.ref ('/tokens').push({
+			token: tken,
+			uid: userInLine.uid
+		})
+		
+	})
 }
