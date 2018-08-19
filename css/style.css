@@ -192,3 +192,10 @@ body{
   width: 100%;
   text-align: center !important;
 }
+
+@media only screen and (min-width: 600px) {
+    #app {
+      width: 60%;
+      margin-left: 20%;
+    }
+}

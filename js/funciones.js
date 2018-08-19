@@ -41,17 +41,23 @@ firebase.initializeApp(config);
 var  Auth = firebase.auth();
 var base = firebase.database();
 var storage = firebase.storage();
-const messaging1 = firebase.messaging();
-messaging1.onTokenRefresh(manejadorDeTokens);
+
 //1.1.- Escuchador de cambio en la sesión 
 
-var userInLine = {}
-var config2 = {}
-config2.acceso = 3;
+const userInLine = {}
+const config2 = {}
+
+
+const messaging1 = firebase.messaging();
+	messaging1.usePublicVapidKey("BJYGqSxXpk3kLhuRW8q6YrImAqXyNyLVvCfaB48Cb5FYkDgJMYKHqs2IGCoGL_8014GdKgYrcb39ujkLtOuR83k");
+	messaging1.onTokenRefresh(manejadorDeTokens);
+
 config2.primeraCarga = true;
 Auth.onAuthStateChanged(function(user) {
-  if (user) {
-  
+  if (user) { 
+  	 base.ref('/configuracion/').once('value').then((snap) => {
+ 	 config2.acceso = snap.val().acceso;
+	});
   	$("nav").removeClass("hide")	;
   	$(".sidenav-trigger").removeClass("hide");
   	getPerfil(user);
@@ -61,8 +67,34 @@ Auth.onAuthStateChanged(function(user) {
   		userInLine.nombre = user.displayName;
   		userInLine.imagen = user.photoURL;
   		userInLine.telefono = user.phoneNumber;
+  		userInLine.email = user.email;
+  		base.ref('/users/' + userInLine.uid ).once('value')
+	  		.then((usnap) => {
+	  		if (!usnap.val() ){
+	  			base.ref('/users/' + userInLine.uid).set({
+	  				email: userInLine.email,
+	  				nombre: userInLine.nombre,
+	  				imagen: userInLine.imagen,
+	  				permisos: "1", 
+	  				rol: "estudiante" 
+	  			}); 
+	 		}else{
+				 base.ref('/users/' + userInLine.uid).update({
+					email: userInLine.email,
+					nombre: userInLine.nombre,
+					imagen: userInLine.imagen
+
+	  			});
+
+	 		}
+
+  		});
+	  	activarMensajeria();
   		cargarPost();
-  		activarMensajeria()
+  		messaging1.onMessage(function(playload) {
+  		let notificacion = playload.notification; 
+		 M.toast({html: '<span> '+ notificacion.title +'  creado un nuevo post  <i class="material-icons blue-text">info</i></span>'  });
+		});
   	}else{
   		navegacion("#cuenta");
   	}
@@ -126,8 +158,6 @@ $(document).scroll(function (){
 	if ($(document).scrollTop() >= 50   ){
 		$("#nav").addClass("navbar-fixed");
 		$(".nav-wrapper").addClass("hide");
-		
-
 	}else{
 		$("#nav").removeClass("navbar-fixed");
 		$(".nav-wrapper").removeClass("hide");
@@ -160,8 +190,9 @@ function getPerfil(usuario){
 			$("#estudiante").attr("required", true);
 			$("#estudiante").val( snapshot.val().estudiante);
 			$("#telefono").val( snapshot.val().telefono);
+			$("#rol").prop("checked", true);
 		 }
-		
+	
 		if (snapshot.val().permisos >= config2.acceso){
 				userInLine.scopes = snapshot.val().permisos;
    				$("#rol").parent().addClass('hide')
@@ -176,7 +207,11 @@ function getPerfil(usuario){
  				$('#editar').modal();
       			$("#epostImage").attr("src",usuario.photoURL );
       			$("#epostCip").append(usuario.displayName);
- 		} 
+ 		}else{
+ 			$("#doAcciones").remove();
+ 			$('#acciones').remove();
+ 			$('#editar').remove();
+ 		}
 
 	});
 
@@ -207,7 +242,6 @@ $("#perfil").submit(function(){
 	var fichero = document.getElementById("photoURL");
 	var imagenAsubir = fichero.files[0];
 	var perfil = {};
-
 	if (imagenAsubir){
 		storage.ref().child("imagenes/userPhoto/" + $("#userId").val()).put(imagenAsubir)
 		.then(function (snap){
@@ -227,15 +261,11 @@ $("#perfil").submit(function(){
 		perfil.permisos=2;
 		perfil.telefono = $("#telefono").val();
 		perfil.estudiante = $("#estudiante").val();
-
-
-	}else{
-		
+	}else{	
 		perfil.rol = $("#soy").val();
 		perfil.telefono= null;
 		perfil.estudiante = null
 		perfil.permisos= $("#soy").attr("data-scopes");
-
 	}
 	
 	Auth.currentUser.updateProfile({
@@ -288,10 +318,11 @@ $("#loginConFacebook").click(function (){
 		provider.setCustomParameters({
 		  'display': 'popup'
 		});
-		firebase.auth().signInWithPopup(provider).then(function(result) {
+		firebase.auth().signInWithPopup(provider)
+		.then(function(result) {
 	  	var token = result.credential.accessToken;
 	    var user = result.user;
-	    
+	      
 	  
 	}).catch(function(error) {
 	 
@@ -342,6 +373,8 @@ $("#RegistrarConFacebook").click(function (){
 $("#postSend").click(async function (){
 	var postData = {
 		uid: userInLine.uid,
+		uName: userInLine.nombre,
+		uImagen: userInLine.imagen
 	};
 	var newPostKey = firebase.database().ref().child('posts').push().key;
 	if ($("#postText").val() != "" ||   adjuntos.contPics > 0 || adjuntos.Contfil > 0 ){
@@ -431,7 +464,8 @@ $("#postSend").click(async function (){
 //10.A.- CArga de archivos 
 function cargarArchivos (ruta, archivo){
 	var postArchivo = storage.ref().child( ruta + "/" + archivo.name);
-	return postArchivo.put (archivo).then(function (snap){
+	return postArchivo.put (archivo)
+	.then(function (snap){
 		return snap.downloadURL;
 	});
 
@@ -483,18 +517,31 @@ $("#postText").on('keyup', function (){
 
 
 function cargarPost(){
-	var publicaciones = firebase.database().ref('posts/');
-	publicaciones.once("value", function (p){
-	
-	})
+	var publicaciones = firebase.database().ref('posts/').limitToLast(10);
 
+	publicaciones.once("value", (snap)=> {
+		snap.forEach((data) => {
+			console.log();
+		  publicar(data, "init");
+		})
+	})
+	.then(() => {
+		var ultimaPublicacion  = firebase.database().ref('posts/').limitToLast(1)
+		return ultimaPublicacion.on("child_added",  (data) => {
+			publicar(data, "add")
+
+		});
+	});
 	publicaciones.on('child_changed', function (data){
 		publicar(data, "change");
 	});
-	publicaciones.on ('child_added', function (data){
-		
-		publicar(data, "add");
+
+	publicaciones.on('child_removed', function (data){
+		$("#" + data.key).remove();
 	});
+	/*publicaciones.on ('child_added', function (data){	
+		publicar(data, "add");
+	})*/;
 }
 
 function publicar(post, accion ){
@@ -518,7 +565,6 @@ function publicar(post, accion ){
 		if (post.val().likes > 0 ){
 			totalLikes = ` <b> ${post.val().likes} me gusta </b>`; 
 		}
-
 
 		var totalComentarios =``;
 		if (post.val().comentarios){
@@ -649,7 +695,7 @@ function publicar(post, accion ){
  					
 			      </div>
 		`;
-	
+		
 		if (accion == "change"){
 			$("#"+ publicacion.id).replaceWith(objetoPublicacion);
 		}
@@ -658,7 +704,13 @@ function publicar(post, accion ){
 
 		}
 		if (accion == "add"  && config2.primeraCarga==true){
-			$("#publicaciones").append(objetoPublicacion);		
+			if ( $("#" + publicacion.id).length != 0 ){
+			
+				$("#"+ publicacion.id).replaceWith(objetoPublicacion);
+			}else{
+	 			$("#publicaciones").prepend(objetoPublicacion);		
+	 		}
+			
 		}
 		$('.dropdown-trigger').dropdown();
 
@@ -988,16 +1040,15 @@ $("#epostColor").click(function (){
 function activarMensajeria(){
 	messaging1.requestPermission()
 	.then(()=> messaging1.getToken())
-	.then((tken)=> manejadorDeTokens () )
+	.then((tken) => manejadorDeTokens () )
 	.catch((e)=> console.log("ocurri un erro" + e));
 }
 
 function manejadorDeTokens (){
 	return messaging1.getToken()
-	.then((tken)=> {
-		base.ref ('/tokens').push({
-			token: tken,
-			uid: userInLine.uid
+	.then((token)=> {
+		base.ref ('/tokens/' + userInLine.uid ).set({
+			token: token
 		})
 		
 	})
