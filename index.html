@@ -27,15 +27,15 @@
               <ul id="nav-mobile" class="right hide-on-med-and-down">
                 <li><a href="#home">Inicio</a></li>
                 <li><a href="#cuenta">Cuenta</a></li>
-                <li><a id="cerrar">Cerrar sesión</a></li>
+                <li><a id="close">Cerrar sesión</a></li>
               </ul>
             </div>
             <div class="nav-content">
               <ul class="tabs tabs-transparent #ff80ab pink accent-1">
                 <!-- <li class="tab"><a href="#test1"><i class="material-icons">camera_alt</i></a></li>-->
                 <li class="tab"  class="active" ><a  class="active" href="#home"><i class="material-icons">public</i></a></li>
-                 <li class="tab"><a href="#test4"><i class="material-icons">message</i></a></li> 
-                <li class="tab"><a href="#test4"><i class="material-icons">history</i></a></li>
+                 <li class="tab"><a id ="toChat"  href="#chat"><i class="material-icons">message</i></a></li> 
+                 <li class="tab"><a href="#test4"><i class="material-icons">history</i></a></li>
               </ul>
             </div>
           </nav>
@@ -288,6 +288,28 @@
             </div>
           
          </div> <!--Fin del home -->
+
+         <!--**********Chat ***********-->
+          <div id="chat" class="appPagina hide">
+            <div class="input-field col s12">
+              <i class="material-icons prefix">search</i>
+              <input id ="buscarUsuario" type="text" >
+              <label for="buscador">Buscar</label>
+            </div>     
+            <ul id="listaUsuarios" class="collection">     
+            </ul>
+          </div> <!--*********fin Chat ***********-->
+          <!--**********Conversacion ***********-->
+          <div id="conversacion" class="appPagina hide">
+          </div> <!--*********fin Conversación ***********-->
+
+             <!--**********Conversacion ***********-->
+          <div id="verPost" class="appPagina hide">
+            
+          </div> <!--*********fin Conversación ***********-->
+
+           
+
   
         </div><!-- fin Appcontenedora -->
         
@@ -300,9 +322,6 @@
         <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase-storage.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
         <script type="text/javascript" src="js/materialize.min.js"></script>
-
-  <script type="text/javascript" src="js/funciones.js"></script>
-
-   
+        <script type="text/javascript" src="js/funciones.js"></script>  
     </body>
   </html>

@@ -128,23 +128,25 @@ body{
 	width: 100%;
 	box-shadow: 0;
 	color: #880e4f;
-	height:  2em !important;
+	height: 100%; 
+  vertical-align: baseline;
+  
 
-  
-  
 }
 
 .comentarios textarea:focus {
     border-color: rgb(255, 255, 255);
     box-shadow: 0 0px 0px rgba(229, 103, 23, 0.075)inset, 0 0 0px rgba(255,144,0,0.6);
     outline: 0 none;
+    
 
-   }
+  }
 .comentarios center{
- -moz-border-radius: 1em;
- -webkit-border-radius:1em;
- background: #f9f2f4;
- margin: 0.5em;
+ border: solid 1px #ff80ab ;
+ -moz-border-radius: .8em;
+ -webkit-border-radius:.8em;
+  margin: 0.5em;
+ margin-bottom: : 1.5em !important;
 }
 .comentarios .com{
 	margin-left: 1em;
@@ -157,7 +159,10 @@ body{
 }
 .comentarios .texto-comentario{
 	margin-left: 3em;
+  margin-right: 0.5em;
 	margin-top: -1em !important;
+  text-align: justify;
+  overflow: auto;
 
 }
 #postColores .active {

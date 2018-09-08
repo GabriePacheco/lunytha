@@ -49,8 +49,8 @@ const config2 = {}
 
 
 const messaging1 = firebase.messaging();
-	messaging1.usePublicVapidKey("BJYGqSxXpk3kLhuRW8q6YrImAqXyNyLVvCfaB48Cb5FYkDgJMYKHqs2IGCoGL_8014GdKgYrcb39ujkLtOuR83k");
-	messaging1.onTokenRefresh(manejadorDeTokens);
+messaging1.usePublicVapidKey("BJYGqSxXpk3kLhuRW8q6YrImAqXyNyLVvCfaB48Cb5FYkDgJMYKHqs2IGCoGL_8014GdKgYrcb39ujkLtOuR83k");
+messaging1.onTokenRefresh(manejadorDeTokens);
 
 config2.primeraCarga = true;
 Auth.onAuthStateChanged(function(user) {
@@ -93,6 +93,7 @@ Auth.onAuthStateChanged(function(user) {
   		cargarPost();
   		messaging1.onMessage(function(playload) {
   		let notificacion = playload.notification; 
+  		reproducirSonido();	
 		 M.toast({html: '<span> '+ notificacion.title +'  creado un nuevo post  <i class="material-icons blue-text">info</i></span>'  });
 		});
   	}else{
@@ -110,6 +111,10 @@ Auth.onAuthStateChanged(function(user) {
 $("#cerrar").click(function (){
 	firebase.auth().signOut();
 });
+$("#close").click(function (){
+	firebase.auth().signOut();
+});
+
 
 //3. Registrar con Email Botón 
 $("#registrar").submit(function (){
@@ -230,7 +235,6 @@ $("#photoURL").change(function (e){
 	var file = e.target.files[0];
 	if (file){
 		var src = URL.createObjectURL(file);
-	
 		$("#foto").html("<h1><img src='"+src+"' class='responsive-img circle' /></h1>");
 	}
 
@@ -243,16 +247,20 @@ $("#perfil").submit(function(){
 	var imagenAsubir = fichero.files[0];
 	var perfil = {};
 	if (imagenAsubir){
-		storage.ref().child("imagenes/userPhoto/" + $("#userId").val()).put(imagenAsubir)
+		var referencia = userInLine.uid+"."+fichero.files[0].name.split(".")[1];
+		perfil.imagen = referencia;
+		storage.ref().child("imagenes/userPhoto/" + perfil.imagen).put(imagenAsubir)
 		.then(function (snap){
 				var urlImage = snap.downloadURL;	
-				perfil.imagen = snap.downloadURL;
 				Auth.currentUser.updateProfile({
 					photoURL: urlImage
 				});
 		});
+
+
 	}
-	perfil.imagen = userInLine.imagen;	
+
+
 	perfil.nombre = $("#nombre_perfil").val();
 	perfil.email = $("#email_perfil").val();
 	
@@ -379,9 +387,10 @@ $("#postSend").click(async function (){
 	var newPostKey = firebase.database().ref().child('posts').push().key;
 	if ($("#postText").val() != "" ||   adjuntos.contPics > 0 || adjuntos.Contfil > 0 ){
 		$("#publicaciones").prepend(`
-			<div class="row  publicando">
-				<div class="col s6">
-					<h6>Publicando..</h6>
+			<div class="row publicando">
+				<div class ="card">
+				<div class= col s6">
+					<div class="col s3" id ="imagen-publicacion"></div> <h6>Publicando..</h6>
 				</div>
 				<div class="col s6 right-align">  
 						<div class="preloader-wrapper small active">
@@ -396,6 +405,7 @@ $("#postSend").click(async function (){
 						    </div>
 						  </div>
 
+				</div>
 				</div>		  
 			</div>			  
 						  
@@ -403,20 +413,26 @@ $("#postSend").click(async function (){
 			`);
 		if (adjuntos.contPics > 0 ){
 			postData.imagenes=[];
+			postData.refImagenes=[];
 			for (var i = 0; i < adjuntos.pics.length; i++ ){
-				var URLimagen = await cargarArchivos("imagenes/posts" , adjuntos.pics[i]);
-				console.log("subiendo foto " + i);
+				var ref = "imagen" + newPostKey + "-" + i;
+				var src = URL.createObjectURL(adjuntos.pics[i])
+				$("#imagen-publicacion").css({'background-image': 'url ("' + src + '"); '});
+				var URLimagen = await cargarArchivos("imagenes/posts",adjuntos.pics[i],ref);
 				postData.imagenes.push(URLimagen);
+				postData.refImagenes.push(ref);
 			}
 		}
 		if ( adjuntos.Contfil > 0){
 			postData.archivos=[];
 			postData.archivosNombres=[];
+			postData.refArchivos=[];
 			for (var f = 0 ; f < adjuntos.fil.length; f++){
-				
-				var URLarchivo = await cargarArchivos("archivos/posts" , adjuntos.fil[f]);
+				var referencia = "archivo" + newPostKey + "-"+ f;
+				var URLarchivo = await cargarArchivos("archivos/posts" ,adjuntos.fil[f], referencia);
 				postData.archivos.push(URLarchivo);
 				postData.archivosNombres.push(adjuntos.fil[f].name);
+				postData.refArchivos.push(referencia);
 			}
 		}
 		if ($("#postText").val() != ""){
@@ -433,17 +449,17 @@ $("#postSend").click(async function (){
 
 		var fecha = new Date();
 		postData.fecha = fecha; 
+		
 		postData.likes=0;
-
 	     adjuntos.contPics = 0;
 		 adjuntos.Contfil = 0;
 		 adjuntos.pics = [];
 		 adjuntos.fil = [];
 		
-		 $("#postText").html("");
-		 $("#postText").val("");
-		 $("#postAdjuntos").html("");
-		 $("#postFotos").html("");
+		$("#postText").html("");
+		$("#postText").val("");
+		$("#postAdjuntos").html("");
+		$("#postFotos").html("");
 	 	$("#postText").removeClass("textoVerde");
 		$("#postText").removeClass("textoAzul");
 		$("#postText").removeClass("textoNaranja");
@@ -453,21 +469,23 @@ $("#postSend").click(async function (){
 		var updates = {};
 		
 		updates['/posts/' + newPostKey] = postData;
-		return firebase.database().ref().update(updates);
-
+		return firebase.database().ref().update(updates)
+		.then(function (){
+			delete postData;
+			$(".publicando").remove();
+		});
 	}
 
-	 
-	
 
 });
 //10.A.- CArga de archivos 
-function cargarArchivos (ruta, archivo){
-	var postArchivo = storage.ref().child( ruta + "/" + archivo.name);
+function cargarArchivos (ruta, archivo,referencia){
+	var postArchivo = storage.ref().child( ruta + "/" + referencia);
 	return postArchivo.put (archivo)
 	.then(function (snap){
 		return snap.downloadURL;
 	});
+
 
 }
  //10.1.- Botones del post 
@@ -539,9 +557,7 @@ function cargarPost(){
 	publicaciones.on('child_removed', function (data){
 		$("#" + data.key).remove();
 	});
-	/*publicaciones.on ('child_added', function (data){	
-		publicar(data, "add");
-	})*/;
+
 }
 
 function publicar(post, accion ){
@@ -574,7 +590,7 @@ function publicar(post, accion ){
 			
 			for (var filer = 0; filer <  post.val().archivos.length; filer++){
 				postAdjuntos+= `<div class= "adjuntos">`;
-				postAdjuntos+= `<a data-aciones="true" href="${post.val().archivos[filer]}" ><i class="material-icons">description</i>${post.val().archivosNombres[filer]}</a>`;
+				postAdjuntos+= `<a data-aciones="true" href="${post.val().archivos[filer]}" download="${post.val().archivosNombres[filer]}" ><i class="material-icons">description</i>${post.val().archivosNombres[filer]}</a>`;
 				postAdjuntos+= `</div>`;				
 			}
 			
@@ -621,8 +637,8 @@ function publicar(post, accion ){
 						postImagenes +=	`<div class="col s6" style="background-image: url('${post.val().imagenes[2]}'); no-repeat;background-size: cover; height: ${height}px !important; background-position: center center;" >`;
 						postImagenes +=	`</div>`;
 						if (post.val().imagenes.length  > 4){
-							postImagenes +=	`<div class="col s6" style="background-image: url('${post.val().imagenes[3]}'); no-repeat;background-size: cover; height: ${height}px !important; background-position: center center;" >
-							<center class="pink-text"><h2><b> + ${post.val().imagenes.length-4} </b></h2></center>
+							postImagenes +=	`<div class="col s6" onClick="abrirPost('${post.key}')" style="background-image: url('${post.val().imagenes[3]}'); no-repeat;background-size: cover; height: ${height}px !important; background-position: center center;" >
+							<center class="pink-text" ><h2><b> + ${post.val().imagenes.length-4} </b></h2></center>
 						`;
 						}else{
 							postImagenes +=	`<div class="col s6" style="background-image: url('${post.val().imagenes[3]}'); no-repeat;background-size: cover; height: ${height}px !important; background-position: center center;">`;							
@@ -648,8 +664,8 @@ function publicar(post, accion ){
 		var comentarios = base.ref().child("/posts/" + publicacion.id + "/comentarios");
 			comentarios.once("value", function (comen){
 				comen.forEach(function(comenC){
-				comentario+=`<div id ="com${comenC.key}" class="com grey lighten-2">
-								<div  class="chip #bdbdbd">
+				comentario+=`<div id ="com${comenC.key}" class="com  #fce4ec pink lighten-5">
+								<div  class="chip #fce4ec pink lighten-5">
 				                  <img  src="${comenC.val().imagen}" alt="${comenC.val().nombre}">            
 									<b>${comenC.val().nombre}</b>	
 
@@ -662,9 +678,9 @@ function publicar(post, accion ){
 		
 		}
 		comentario+=`<center class="row "> 
-                  <textarea class="col s9" id="textComentario${publicacion.id}" onkeyup="up('${publicacion.id}')"  placeholder = "Escribe un comentario"></textarea><i onclick="addComentario('${publicacion.id}')" class="material-icons right-align col s3 hide">send</i>  	
-                 </center>
-		</div> `;
+                	  	<textarea class="col s9" id="textComentario${publicacion.id}" onkeyup="up('${publicacion.id}')"  placeholder = "Escribe un comentario"></textarea><i onclick="addComentario('${publicacion.id}')" class="material-icons right-align col s3 hide #ff80ab pink-text accent-1 ">send</i>  	
+                 		</center>
+					</div> `;
 		var text ='';
 		if (!post.val().textoColor ){
 			text+=  `<div class="texto"><p class="flow-text">${post.val().texto}</p></div>`;
@@ -712,12 +728,18 @@ function publicar(post, accion ){
 	 		}
 			
 		}
+
 		$('.dropdown-trigger').dropdown();
 
  	});
 	;
-	$(".publicando").remove();	
+	$(".publicando").remove();
 
+
+}
+reproducirSonido  = function (){
+var audio = new Audio('iphone-notificacion.mp3');
+audio.play();
 }
 
 //12 Calcular Fecha y hora 
@@ -730,6 +752,7 @@ function calcularFecha (fechas){
 	let horas = dif / (1000 * 60 * 60  );
 	let minutos = dif / (1000 * 60  );
 	var mostrar = "Justo ahora";
+
 
 	if(dias < 1 && horas < 1 && minutos >= 1){
 		mostrar = "hace " +  Math.floor(minutos) + " minutos";
@@ -1033,7 +1056,6 @@ $("#epostColor").click(function (){
 		$("#epostText").removeClass("textoAzul");
 		$("#epostText").removeClass("textoNaranja");
 		$("#epostText").removeClass("textoRojo");
-
 	}
 });
 
@@ -1041,15 +1063,126 @@ function activarMensajeria(){
 	messaging1.requestPermission()
 	.then(()=> messaging1.getToken())
 	.then((tken) => manejadorDeTokens () )
-	.catch((e)=> console.log("ocurri un erro" + e));
+	.catch((e)=> console.log("ocurrio un error " + e));
 }
 
 function manejadorDeTokens (){
 	return messaging1.getToken()
 	.then((token)=> {
-		base.ref ('/tokens/' + userInLine.uid ).set({
-			token: token
+		base.ref ('/tokens/' + token ).set({
+			token: token,
+			uid: userInLine.uid
 		})
 		
 	})
+}
+
+$("#toChat").click(function(){
+	$("#listaUsuarios").html("");
+	var listaUsuarios = base.ref("/users/");
+	listaUsuarios.once('value', function (snapshot){
+		snapshot.forEach((item) => {
+			let usuario  = `
+					<li class="collection-item avatar" data-id="${item.key}" onclick="getConversacion('${item.key}')">
+     				  <img src="${item.val().imagen}" alt="" class="circle">
+				      <span class="title">${item.val().nombre}</span>			      
+				    </li>
+			`;
+				$("#listaUsuarios").append(usuario);
+		})
+	});
+});
+
+$("#buscarUsuario").keyup(function (){
+	$("#listaUsuarios").html("");
+	var listaUsuarios = base.ref("/users/").orderByChild('nombre').startAt($("#buscarUsuario").val());
+		listaUsuarios.once('value', function (snapshot){
+		snapshot.forEach((item) => {
+			let usuario  = `
+					<li class="collection-item avatar"  data-id="${item.key}" onclick="getConversacion('${item.key}')">
+     				  <img src="${item.val().imagen}" alt="" class="circle">
+				      <span class="title">${item.val().nombre}</span>
+				      <p>First Line 
+				      </p>
+				      <a href="#!" class="secondary-content"><i class="material-icons">grade</i></a>
+				    </li>
+			`;
+				$("#listaUsuarios").append(usuario);
+		})
+	});
+
+
+});
+
+function abrirPost(postId){
+	$("#verPost").html("");
+	base.ref("/posts/" + postId).once("value")
+	.then(function(snapshot){
+	var verPost = snapshot.val();
+	var text = ``; 		
+	if (!verPost.textoColor ){
+		text+=  `<div class="texto"><p class="flow-text">${verPost.texto}</p></div>`;
+	}else{
+		text+=  `<div class="valign-wrapper ${verPost.textoColor} fondo center-align"><h4 class="center-align">${post.val().texto}</h4></div>`;
+	}
+	var postImagenes =``;
+	for (let imgs = 0 ; imgs < verPost.imagenes.length; imgs++ ){
+		postImagenes +=
+		`<div class="card-image">
+	      	<img src="${verPost.imagenes[imgs]}">
+	     `;		          
+	}
+	var postLike ="";
+		if (!verPost.likeA || !verPost.likeA[userInLine.uid] ){
+			postLike +=`<i class="material-icons" id = "like${postId}" onclick="like('${postId}',${verPost.likes}) " >favorite_border</i>` ;	
+			
+		}else{
+			postLike +=`<i class="material-icons #ff80ab-text pink-text accent-2" id = "like${postId}" onclick="like('${postId}',${verPost.likes}) " >favorite</i> ` ;		
+		}
+		var totalLikes = ``;
+		if (verPost.likes > 0 ){
+			totalLikes = ` <b> ${verPost.likes} me gusta </b>`; 
+		}
+		var totalComentarios =``;
+		if (verPost.comentarios){
+			totalComentarios +=`<b>` +Object.keys(verPost.comentarios).length + ` comentarios </b> `;
+		}
+		var postAdjuntos = ``;
+		if (verPost.archivos ){
+		
+			for (var filer = 0; filer <  verPost.archivos.length; filer++){
+				postAdjuntos+= `<div class= "adjuntos">`;
+				postAdjuntos+= `<a data-aciones="true" href="${verPost.archivos[filer]}" ><i class="material-icons">description</i>${verPost.archivosNombres[filer]}</a>`;
+				postAdjuntos+= `</div>`;				
+			}
+			
+			
+		}
+	var objetoPublicacion = `
+     <div id = "VerPost_${postId}" class="card" >
+      	<div class="usuarioPost"> 		      	
+     	
+     	 <div class="chip white">
+		    <img src="${verPost.uImagen}" alt="${verPost.uName}" >
+		    <b>${verPost.uName}</b>
+		  </div>
+		    <small>${calcularFecha(verPost.fecha)}</small>			  
+		</div>
+        ${text}		        
+        ${postImagenes}
+		${postAdjuntos}	
+		  <div class="card sticky-action">
+				  <div class="card-action row">
+				 	 <div class="col s6">${postLike} ${totalLikes}</div>	
+				 	 <div class="col s6 right-align">${totalComentarios}<i class="material-icons"  >chat_bubble_outline</i></div>						  
+				  </div> 
+			
+			  </div>
+			
+      </div>
+		`;
+		$("#verPost").html(objetoPublicacion);
+
+	});
+	navegacion("#verPost");
 }
