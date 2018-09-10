@@ -291,21 +291,57 @@
 
          <!--**********Chat ***********-->
           <div id="chat" class="appPagina hide">
-            <div class="input-field col s12">
-              <i class="material-icons prefix">search</i>
-              <input id ="buscarUsuario" type="text" >
-              <label for="buscador">Buscar</label>
-            </div>     
+            <ul id="listaConversaciones" class="collection">     
+            </ul>
+            <div class="fixed-action-btn">
+              <a href ="#contactos" class="btn-floating btn-medium  #ff80ab pink accent-1">
+                <i class="large material-icons">mode_edit</i>
+              </a>
+            </div>
+          </div> <!--*********fin Chat ***********-->
+          <!-- ******* Contactos  ************  -->
+          <div id="contactos" class="appPagina hide">
+            <div class="navbar-fixed #ff80ab pink accent-1 valign-wrapper">    
+                  <a href="#chat" class="white-text"> <i class="material-icons">arrow_back</i></a>   
+                  <strong> Contactos</strong>
+          </div>
+    
+          <div class="input-field col s12">
+            <i class="material-icons prefix">search</i>
+            <input id="BuscaNombre" class="validate" / >
+            <label for="BuscaNombre">Buscar nombre</label>
+          </div>
+           
             <ul id="listaUsuarios" class="collection">     
             </ul>
-          </div> <!--*********fin Chat ***********-->
+            
+          </div><!-- Fin CPntactps -->
+
           <!--**********Conversacion ***********-->
           <div id="conversacion" class="appPagina hide">
+            <div class="laConversacion">
+              <div class="navbar-fixed #ff80ab pink accent-1 valign-wrapper">               
+                  <a href="#chat" class="white-text"> <i class="material-icons">arrow_back</i></a>
+                  <img id ="chatImagen" src="" alt="" class="circle" width="35em"  height="35em">
+                  <strong id="chatNombre"> </strong>
+                
+              </div>
+              <div id ="mensajes"></div>
+             <div class="preMensaje ">
+                  <i id ="camaraMensaje" class="material-icons">camera_alt</i>
+                  <textarea id="mensaje" class="materialize-textarea" placeholder="Escribe un mensaje"></textarea>    
+                  <i id ="adjuntoMensaje" class="material-icons">attach_file</i>
+                  <i id ="enviarMensaje" class="material-icons">send</i>
+              </div>
+            </div>
           </div> <!--*********fin Conversación ***********-->
 
              <!--**********Conversacion ***********-->
           <div id="verPost" class="appPagina hide">
-            
+          <div class="navbar-fixed #ff80ab pink accent-1 valign-wrapper">    
+                 <a href="#home" class="white-text"> <i class="material-icons">arrow_back</i></a>      
+          </div>
+            <div class="contenido"></div>
           </div> <!--*********fin Conversación ***********-->
 
            

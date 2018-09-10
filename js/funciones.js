@@ -53,6 +53,21 @@ messaging1.usePublicVapidKey("BJYGqSxXpk3kLhuRW8q6YrImAqXyNyLVvCfaB48Cb5FYkDgJMY
 messaging1.onTokenRefresh(manejadorDeTokens);
 
 config2.primeraCarga = true;
+function conexion (){
+	var connectedRef = firebase.database().ref(".info/connected");
+	connectedRef.on("value", function(snap) {
+	  if (snap.val() === true) {
+	   $(".noConectado").remove();
+	  } else {
+	   if ($(".publicando").length > 0){
+	   	$(".publicando").prepend("<i class='nConectado'>esperando por conxion a internet...</i>");
+
+	   }else{
+	   	$("#publicaciones").prepend("<i class='noConectado'>sin conexion a intenet..</i>");
+	  }
+	  }
+	});
+}
 Auth.onAuthStateChanged(function(user) {
   if (user) { 
   	 base.ref('/configuracion/').once('value').then((snap) => {
@@ -91,6 +106,7 @@ Auth.onAuthStateChanged(function(user) {
   		});
 	  	activarMensajeria();
   		cargarPost();
+  		conexion ();
   		messaging1.onMessage(function(playload) {
   		let notificacion = playload.notification; 
   		reproducirSonido();	
@@ -145,6 +161,13 @@ $(document).ready(function(){
 function navegacion (paginaActiva){
 	$(".appPagina").addClass("hide");
 	$("" + paginaActiva).removeClass("hide");
+	if (paginaActiva != "#home" && paginaActiva !=  "#cuenta" && paginaActiva != "configuracion" && paginaActiva != "#chat" ){
+		$("#nav").addClass("hide");
+	}else{
+		$("#nav").removeClass("hide");
+	}
+
+
 }
 //5.1.- Cierra la barra de menú
 $("a").click(function (){
@@ -388,36 +411,35 @@ $("#postSend").click(async function (){
 	if ($("#postText").val() != "" ||   adjuntos.contPics > 0 || adjuntos.Contfil > 0 ){
 		$("#publicaciones").prepend(`
 			<div class="row publicando">
-				<div class ="card">
-				<div class= col s6">
-					<div class="col s3" id ="imagen-publicacion"></div> <h6>Publicando..</h6>
-				</div>
-				<div class="col s6 right-align">  
-						<div class="preloader-wrapper small active">
-   							 <div class="spinner-layer spinner-green-only">
-						      <div class="circle-clipper left">
-						        <div class="circle"></div>
-						      </div><div class="gap-patch">
-						        <div class="circle"></div>
-						      </div><div class="circle-clipper right">
-						        <div class="circle"></div>
-						      </div>
-						    </div>
-						  </div>
+				<div  class="card col s12">
+					<div class="row">
+						<div class="col s6"><div id="imgPublicacion" class="col s4"></div> Publicando...</div>
+						<div class="col s6 right-align">				
+							<div class="preloader-wrapper small active">
 
+							    <div class="spinner-layer spinner-green-only">
+							      <div class="circle-clipper left">
+							        <div class="circle"></div>
+							      </div><div class="gap-patch">
+							        <div class="circle"></div>
+							      </div><div class="circle-clipper right">
+							        <div class="circle"></div>
+							      </div>
+							    </div>
+							 </div>							
+						</div>
+					</div>
 				</div>
-				</div>		  
-			</div>			  
-						  
-
-			`);
+				
+				  
+			</div> `);
 		if (adjuntos.contPics > 0 ){
 			postData.imagenes=[];
 			postData.refImagenes=[];
 			for (var i = 0; i < adjuntos.pics.length; i++ ){
 				var ref = "imagen" + newPostKey + "-" + i;
 				var src = URL.createObjectURL(adjuntos.pics[i])
-				$("#imagen-publicacion").css({'background-image': 'url ("' + src + '"); '});
+				$("#imgPublicacion").html("<img src='"+src+"' class='responsive-img' height='2em'>");
 				var URLimagen = await cargarArchivos("imagenes/posts",adjuntos.pics[i],ref);
 				postData.imagenes.push(URLimagen);
 				postData.refImagenes.push(ref);
@@ -819,11 +841,44 @@ function like (id, totaldelikes){
 
 
 //14.- Borrar el POST
-function reciclar(postId){
-	base.ref('posts/' + postId).remove().then(function(){
-		$("#" + postId).remove();
+async function  reciclar(postId){
+
+	new Promise((resolver, rechazar) => {
+    $("#" + postId).remove();	
+    	var postBorrar = base.ref('posts/' + postId);
+    		     postBorrar.once("value", function (snap){
+    			if (snap.val().refImagenes){
+    				for (let i =0; i<snap.val().refImagenes.length; i++){
+    					storage.ref().child("imagenes/posts/" +snap.val().refImagenes[i])
+    					.delete();
+
+    				}
+    			}
+    			if (snap.val().refArchivos){
+    				for (let i =0; i<snap.val().refArchivos.length; i++){
+    					storage.ref().child("archivos/posts/" +snap.val().refArchivos[i])
+    					.delete();
+
+    				}
+    			}
+    	});
+
+	    resolver();
+	})
+	.then(() => {
+	    throw new Error('Algo falló'  );
+
+	})
+	.catch(() => {
+	    
+	})
+	.then(() => {
+		var postBorrar = base.ref('posts/' + postId)
+	   postBorrar.remove();
 	});
-}	
+
+
+	}	
 
 //15 Editar post 
 var ePosts = {}
@@ -851,7 +906,7 @@ function editar (postId){
 			var listPhotos = '';
 			ePosts.imagenes=[];
 			for (var ephotos = 0; ephotos < snp.val().imagenes.length; ephotos++){
-				listPhotos +=`<div class="col s3 tum" data-img="egal${ephotos}"  onclick="quitar('imagenes', '${ephotos}', '${ephotos}')"><img class="responsive-img" src="${snp.val().imagenes[ephotos]}"><i class="material-icons">delete</i></div>`; 							
+				listPhotos +=`<div class="col s3 tum" data-img="egal${ephotos}"  onclick="quitar('imagenes', '${ephotos}', '${ephotos}')"><img class="responsive-img" src="${snp.val().imagenes[ephotos]}"><i class="material-icons basurero">delete</i></div>`; 							
 				ePosts.imagenes.push(snp.val().imagenes[ephotos]);
 			}
 
@@ -898,13 +953,21 @@ function quitar(arreglo, valor, data){
 $("#epostSend").click(async function (e){
 
 	ePosts.texto = $("#epostText").val();
+	$("#" + $("#editar").attr('data-id')  ).prepend(` <div class="progress  #ff80ab pink accent-1">
+      <div class="indeterminate  #ff80ab pink accent-2"></div>
+  </div>`);
+	
 	if (nimagen || nimagen.length > 0){
 		if (!ePosts.imagenes){
 			ePosts.imagenes=[];
+			
 		}
+		ePosts.refImagenes=[];
 		for (let s = 0 ; s < nimagen.length ; s++){
-			let nFoto = await cargarArchivos ("/imagenes/post/", nimagen[s]);
+			var ref = "Imagen" + $("#editar").attr('data-id') + "-" + s;
+			let nFoto = await cargarArchivos ("/imagenes/posts/", nimagen[s], ref);
 			ePosts.imagenes.push(nFoto);
+			ePosts.refImagenes.push(ref);
 		
 		}
 		nimagen= [];
@@ -913,14 +976,15 @@ $("#epostSend").click(async function (e){
 	if (nadjunto|| nadjunto.length > 0){
 		if (!ePosts.archivos){
 			ePosts.archivos=[];
-			ePosts.archivosNombre=[];
+			ePosts.archivosNombres=[];
+			ePosts.refArchivos=[]
 		}
 		for (let j = 0 ; j < nadjunto.length ; j++){
-			let nAdjunto = await cargarArchivos ("/archivos/post/", nadjunto[j]);	
-			console.log("\n DIRECION Archivo Cargado : " +  nAdjunto);
+			var referencia = "archivo" + $("#editar").attr('data-id') + "-"+ j;	
+			let nAdjunto = await cargarArchivos ("/archivos/posts/", nadjunto[j], referencia);	
 			ePosts.archivos.push(nAdjunto);
-			console.log("\n Nombre Archivo Cargado : " +  nAdjunto);
 			ePosts.archivosNombres.push(nadjuntoNombres[j]);
+			ePosts.refArchivos.push(referencia);
 		
 		}
 			nadjunto= [];
@@ -931,15 +995,20 @@ $("#epostSend").click(async function (e){
 	}else{
 		ePosts.textoColor=false;
 	}
+	if (ePosts.textoColor == undefined){
+			ePosts.textoColor=false;
+	}
 	var  editarPost = base.ref().child("/posts/" + $("#editar").attr('data-id') );
 	editarPost.update(ePosts).then (
 		function (){
-			ePosts={}
-			ePosts.texto ="";
-			ePosts.imagenes ="";
-			ePosts.archivos=[];
-			ePosts.archivosNombres=[];
-			ePosts.textoColor=null;
+			delete ePosts.texto;
+			delete ePosts.imagenes;
+			delete ePosts.archivos;
+			delete ePosts.archivosNombres;
+			delete ePosts.textoColor
+			delete ePosts.refArchivos;
+			delete ePosts.refImagenes;
+			ePosts={};
 			$("#epostText").attr("data-color", null);
 
 		}
@@ -1077,45 +1146,10 @@ function manejadorDeTokens (){
 	})
 }
 
-$("#toChat").click(function(){
-	$("#listaUsuarios").html("");
-	var listaUsuarios = base.ref("/users/");
-	listaUsuarios.once('value', function (snapshot){
-		snapshot.forEach((item) => {
-			let usuario  = `
-					<li class="collection-item avatar" data-id="${item.key}" onclick="getConversacion('${item.key}')">
-     				  <img src="${item.val().imagen}" alt="" class="circle">
-				      <span class="title">${item.val().nombre}</span>			      
-				    </li>
-			`;
-				$("#listaUsuarios").append(usuario);
-		})
-	});
-});
 
-$("#buscarUsuario").keyup(function (){
-	$("#listaUsuarios").html("");
-	var listaUsuarios = base.ref("/users/").orderByChild('nombre').startAt($("#buscarUsuario").val());
-		listaUsuarios.once('value', function (snapshot){
-		snapshot.forEach((item) => {
-			let usuario  = `
-					<li class="collection-item avatar"  data-id="${item.key}" onclick="getConversacion('${item.key}')">
-     				  <img src="${item.val().imagen}" alt="" class="circle">
-				      <span class="title">${item.val().nombre}</span>
-				      <p>First Line 
-				      </p>
-				      <a href="#!" class="secondary-content"><i class="material-icons">grade</i></a>
-				    </li>
-			`;
-				$("#listaUsuarios").append(usuario);
-		})
-	});
-
-
-});
 
 function abrirPost(postId){
-	$("#verPost").html("");
+	$("#verPost .contenido").html("");
 	base.ref("/posts/" + postId).once("value")
 	.then(function(snapshot){
 	var verPost = snapshot.val();
@@ -1181,8 +1215,115 @@ function abrirPost(postId){
 			
       </div>
 		`;
-		$("#verPost").html(objetoPublicacion);
+		$("#verPost .contenido").html(objetoPublicacion);
 
 	});
 	navegacion("#verPost");
+}
+$("#toChat").click(function (){
+$("#listaConversaciones").html("");
+$("#listaUsuarios").html("");
+
+
+	var comAbiertas = base.ref().child("/conversaciones/").orderByKey().startAt(userInLine.uid);
+	comAbiertas.once('value').then(function (listaConversaciones){
+		listaConversaciones.forEach(function (conversa){
+				var id = conversa.key.split("_")[1];
+			
+				base.ref("/users/" + id).on("value", function (snap){
+					var userConversa =  snap.val();
+				
+					$("#listaConversaciones").append(`<li class="collection-item avatar" data-id="${snap.key}" onClick="abrirConversacion('${snap.key}' , '${userConversa.imagen}', '${userConversa.nombre}')">
+			      		<img src="${userConversa.imagen}" alt="${userConversa.nombre}" class="circle">
+					      <span class="title">${userConversa.nombre}</span>
+					      <p>
+					      	<small></small>		         
+					      </p>
+					    
+					    </li>`
+			    );
+				});
+				
+		});
+
+	});
+
+	
+	var listaUsuarios = base.ref().child("users");
+	listaUsuarios.once("value").then(function (listaU){
+		 listaU.forEach(function(childListaU) {
+
+		 let contacto= childListaU.val()
+		 if (childListaU.key != userInLine.uid){
+			$("#listaUsuarios").append(`<li class="collection-item avatar" data-id="${childListaU.key}" onClick="abrirConversacion('${childListaU.key}', '${contacto.imagen}', '${contacto.nombre}')">
+			      <img src="${contacto.imagen}" alt="${contacto.nombre}" class="circle">
+			      <span class="title">${contacto.nombre}</span>
+			      <p>
+			      	<small>${contacto.rol}</small>		         
+			      </p>
+			    
+			    </li>`
+			    );
+		}
+	 });
+		
+	
+	});
+});
+
+function abrirConversacion(chatId, imagen, nombre) {
+	$("#chatNombre").html(" " + nombre);
+	$("#chatImagen").attr("src", imagen);
+	var conversacion=  userInLine.uid + '_' +chatId;
+	 firebase.database().ref('/conversaciones/' + conversacion).once('value').then(function(snapshot) {
+ 		if ( snapshot.val() ){
+ 			snapshot.forEach( function (childSnapshot){
+ 				console.log(childSnapshot.val());
+ 			});
+
+
+ 		}
+  	
+	});		
+
+	$(".laConversacion").attr("id", conversacion);
+	navegacion("#conversacion");
+
+
+}
+
+$("#enviarMensaje").click(enviador);
+function enviador (){
+	if ($("#mensaje").val() != ""){
+		var sendMensaje ={}
+		sendMensaje.conversacion=$(".laConversacion").attr("id");
+		var fecha = new Date();
+		
+		sendMensaje.fecha=fecha;
+		console.log(fecha);
+		sendMensaje.texto = $("#mensaje").val();
+		sendMensaje.estado = 1;
+
+		$("#mensaje").val("");
+		var nuevoIdMensaje = base.ref().child('/conversaciones/' + sendMensaje.conversacion ).push().key;
+		$("#"+ sendMensaje.conversacion).append(
+			`<div class="right-align mensajeEnviado " id ="sendMensaje.conversacion">
+				<span  class="left-align z-depth-2" > 
+					${sendMensaje.texto} 
+					<small right-align><i>${fecha.getHours()}:${fecha.getMinutes()}</i></small>
+				</span>
+			</div>`);
+
+			var updates = {};
+
+			updates['/conversaciones/' + sendMensaje.conversacion +"/"+ nuevoIdMensaje ] = sendMensaje;
+			base.ref().update(updates)
+			.then(function (){
+				delete sendMensaje;
+			})
+
+	}
+
+
+
 }

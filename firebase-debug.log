@@ -1,43 +1,26 @@
-[debug] [2018-09-08T13:32:22.263Z] ----------------------------------------------------------------------
-[debug] [2018-09-08T13:32:22.270Z] Command:       C:\Users\gpacheco\Desktop\Gpacheco\node\node.exe C:\Users\gpacheco\Desktop\Gpacheco\node\node_modules\firebase-tools\bin\firebase serve
-[debug] [2018-09-08T13:32:22.271Z] CLI Version:   4.1.1
-[debug] [2018-09-08T13:32:22.271Z] Platform:      win32
-[debug] [2018-09-08T13:32:22.271Z] Node Version:  v8.9.4
-[debug] [2018-09-08T13:32:22.271Z] Time:          Sat Sep 08 2018 08:32:22 GMT-0500 (Hora est. Pacífico, Sudamérica)
-[debug] [2018-09-08T13:32:22.271Z] ----------------------------------------------------------------------
+[debug] [2018-09-10T02:31:22.124Z] ----------------------------------------------------------------------
+[debug] [2018-09-10T02:31:22.140Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\EDY COMPU\AppData\Roaming\npm\node_modules\firebase-tools\bin\firebase deploy --only hosting
+[debug] [2018-09-10T02:31:22.140Z] CLI Version:   3.19.3
+[debug] [2018-09-10T02:31:22.140Z] Platform:      win32
+[debug] [2018-09-10T02:31:22.140Z] Node Version:  v6.9.2
+[debug] [2018-09-10T02:31:22.140Z] Time:          Sun Sep 09 2018 21:31:22 GMT-0500 (Hora est. Pacífico, Sudamérica)
+[debug] [2018-09-10T02:31:22.140Z] ----------------------------------------------------------------------
 [debug] 
-[debug] [2018-09-08T13:32:22.331Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
-[debug] [2018-09-08T13:32:22.331Z] > authorizing via signed-in user
-[debug] [2018-09-08T13:32:22.336Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/projects/lunytha-1  
- 
-[debug] [2018-09-08T13:32:23.322Z] <<< HTTP RESPONSE 200
-[debug] [2018-09-08T13:32:23.323Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/database/lunytha-1/tokens  
- 
-[debug] [2018-09-08T13:32:23.845Z] <<< HTTP RESPONSE 200
-[debug] [2018-09-08T13:32:23.847Z] >>> HTTP REQUEST GET https://cloudresourcemanager.googleapis.com/v1/projects/lunytha-1  
- 
-[debug] [2018-09-08T13:32:24.616Z] <<< HTTP RESPONSE 200
+[debug] [2018-09-10T02:31:22.187Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2018-09-10T02:31:22.187Z] > authorizing via signed-in user
+[debug] [2018-09-10T02:31:22.202Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/projects/lunytha-1  
+  
+ Sun Sep 09 2018 21:31:22 GMT-0500 (Hora est. Pacífico, Sudamérica)
+[debug] [2018-09-10T02:31:23.405Z] <<< HTTP RESPONSE 200
+[debug] [2018-09-10T02:31:23.405Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/database/lunytha-1/tokens  
+  
+ Sun Sep 09 2018 21:31:23 GMT-0500 (Hora est. Pacífico, Sudamérica)
+[debug] [2018-09-10T02:31:23.999Z] <<< HTTP RESPONSE 200
 [info] 
-[info] === Serving from 'C:\xampp\htdocs\lunytha'...
+[info] === Deploying to 'lunytha-1'...
 [info] 
-[info] i  functions: Preparing to emulate functions.
-[debug] [2018-09-08T13:32:35.417Z] Fetching environment
-[debug] [2018-09-08T13:32:35.421Z] >>> HTTP REQUEST GET https://mobilesdk-pa.googleapis.com/v1/projects/790058688434:getServerAppConfig  
- 
-[debug] [2018-09-08T13:32:35.422Z] >>> HTTP REQUEST GET https://mobilesdk-pa.googleapis.com/v1/projects/790058688434/clients/_:getWebAppConfig  
- 
-[debug] [2018-09-08T13:32:35.950Z] <<< HTTP RESPONSE 200
-[debug] [2018-09-08T13:32:35.951Z] Starting @google-cloud/functions-emulator
-[debug] [2018-09-08T13:32:36.047Z] <<< HTTP RESPONSE 200
-[info] i  hosting: Serving hosting files from: public
-[info] +  hosting: Local server: http://localhost:5000
-
-[debug] [2018-09-08T13:32:44.313Z] Parsing function triggers
-[warn] !  functions: Failed to load functions source code. Ensure that you have the latest SDK by running npm i --save firebase-functions inside the functions directory.
-[debug] [2018-09-08T13:32:45.772Z] Error during trigger parsing:  Error parsing triggers: Cannot find module 'firebase-admin'
-
-Try running "npm install" in your functions directory before deploying.
-[warn] !  functions: Error from emulator. Error parsing triggers: Cannot find module 'firebase-admin'
-
-Try running "npm install" in your functions directory before deploying.
-[debug] [2018-09-08T13:32:45.779Z] 
+[info] i  deploying hosting
+[info] i  hosting: preparing lunytha directory for upload...
+[debug] [2018-09-10T02:31:32.245Z] >>> HTTP REQUEST PUT https://deploy.firebase.com/v1/hosting/lunytha-1/uploads/-LM0JIiWtR1iXD_Rt7xO?fileCount=255&message=  
+  
+ Sun Sep 09 2018 21:31:32 GMT-0500 (Hora est. Pacífico, Sudamérica)
