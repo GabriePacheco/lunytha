@@ -70,12 +70,14 @@ function conexion (){
 }
 Auth.onAuthStateChanged(function(user) {
   if (user) { 
+
   	 base.ref('/configuracion/').once('value').then((snap) => {
- 	 config2.acceso = snap.val().acceso;
+ 		 config2.acceso = snap.val().acceso;
 	});
+
   	$("nav").removeClass("hide")	;
   	$(".sidenav-trigger").removeClass("hide");
-  	getPerfil(user);
+  	
   	if (user.displayName != null ){
   		navegacion("#home");
   		userInLine.uid = user.uid; 
@@ -102,7 +104,7 @@ Auth.onAuthStateChanged(function(user) {
 	  			});
 
 	 		}
-
+	 		getPerfil(user);
   		});
 	  	activarMensajeria();
   		cargarPost();
@@ -113,7 +115,16 @@ Auth.onAuthStateChanged(function(user) {
 		 M.toast({html: '<span> '+ notificacion.title +'  creado un nuevo post  <i class="material-icons blue-text">info</i></span>'  });
 		});
   	}else{
-  		navegacion("#cuenta");
+  		 base.ref('/users/' + user.uid).set({
+			email: user.email,
+			permisos: "1", 
+	  		rol: "estudiante"		
+
+	  	}).then(function(){   
+	  		getPerfil(user);
+	  		navegacion("#cuenta");
+	  	 });	
+  		
   	}
   } else {
   	$("nav").addClass("hide");
@@ -136,6 +147,10 @@ $("#close").click(function (){
 $("#registrar").submit(function (){
 	if ($("#password_registro").val() == $("#password_registro2").val()){
 		firebase.auth().createUserWithEmailAndPassword($("#email_registro").val(), $("#password_registro").val())
+		.then(function (user){
+			var emailVerified = firebase.auth().currentUser;
+			emailVerified.sendEmailVerification();
+		})
 		.catch(function(error) {
 		if (error.code == "auth/email-already-in-use"){
 			M.toast({html: '<span>El Email ingresado ya esta registrado <i class="material-icons red-text">error</i></span>'  });
@@ -157,18 +172,30 @@ $(document).ready(function(){
  });
 
 
+
+	
+
+
 //5.- Función que controla la navegación de la APP
 function navegacion (paginaActiva){
 	$(".appPagina").addClass("hide");
 	$("" + paginaActiva).removeClass("hide");
-	if (paginaActiva != "#home" && paginaActiva !=  "#cuenta" && paginaActiva != "configuracion" && paginaActiva != "#chat" ){
+	if (paginaActiva != "#home" && paginaActiva != "configuracion" && paginaActiva != "#chat" ){
 		$("#nav").addClass("hide");
 	}else{
 		$("#nav").removeClass("hide");
 	}
-
-
 }
+
+$("#cuentaBack").click(function (){
+
+	if ($("#nombre_perfil").val() == "" ||  $("#estado_perfil").attr("data-provedor") == "false" ){	
+		$("#close").click();
+	}else{
+		navegacion("#home");
+	}
+
+});
 //5.1.- Cierra la barra de menú
 $("a").click(function (){
 	if ( $(this).parent().parent().hasClass("sidenav") ){
@@ -199,6 +226,23 @@ function getPerfil(usuario){
 	$("#userId").val(usuario.uid);
   	$("#email_perfil").val(usuario.email);
 	$("#nombre_perfil").val(usuario.displayName);
+	if (usuario.providerData[0].providerId == "facebook"){
+		$("#estado_perfil").html("FACEBOOK");
+	}
+		if (usuario.providerData[0].providerId == "facebook.com"){
+			$("#estado_perfil").html("Registrado con Facebook");
+			$("#estado_perfil").attr("data-provedor" , "facebook");
+		}else{
+			if (usuario.emailVerified){
+				$("#estado_perfil").html("Email verificado <i class='material-icons'>done</i>");
+				$("#estado_perfil").attr("data-provedor" , "Verificado")
+			}else{
+				$("#estado_perfil").html("<i class='material-icons red-text darken-1'>report_problem</i><strong class='black-text'> Enviamos un e-mail para verificar tu cuenta click en el enlace para continuar.</strong> Sí no lo encuentras <a onClick= 'reenviarConfirmacion()' >Reenviar confirmacion aquí. </a> ");
+				$("#estado_perfil").attr("data-provedor" ,"false");
+			}
+
+		}
+	
 
 	if (usuario.photoURL== null){
 		$("#foto").prepend("<h1><i class='large material-icons'>account_circle</i></h1>");
@@ -277,6 +321,9 @@ $("#perfil").submit(function(){
 				var urlImage = snap.downloadURL;	
 				Auth.currentUser.updateProfile({
 					photoURL: urlImage
+				});
+				base.ref("/users/" +  $("#userId").val() ).update({
+					imagen: urlImage
 				});
 		});
 
@@ -1221,29 +1268,25 @@ function abrirPost(postId){
 	navegacion("#verPost");
 }
 $("#toChat").click(function (){
-$("#listaConversaciones").html("");
-$("#listaUsuarios").html("");
+	$("#listaConversaciones").html("");
+	$("#listaUsuarios").html("");
 
-
-	var comAbiertas = base.ref().child("/conversaciones/").orderByKey().startAt(userInLine.uid);
+	var comAbiertas = base.ref("/conversaciones/").orderByKey().startAt( userInLine.uid + "_");
+	
 	comAbiertas.once('value').then(function (listaConversaciones){
+		console.log(listaConversaciones.val())
 		listaConversaciones.forEach(function (conversa){
-				var id = conversa.key.split("_")[1];
-			
+				var id = conversa.key.split("_")[1];			
 				base.ref("/users/" + id).on("value", function (snap){
-					var userConversa =  snap.val();
-				
+					var userConversa =  snap.val();				
 					$("#listaConversaciones").append(`<li class="collection-item avatar" data-id="${snap.key}" onClick="abrirConversacion('${snap.key}' , '${userConversa.imagen}', '${userConversa.nombre}')">
 			      		<img src="${userConversa.imagen}" alt="${userConversa.nombre}" class="circle">
 					      <span class="title">${userConversa.nombre}</span>
 					      <p>
-					      	<small></small>		         
-					      </p>
-					    
-					    </li>`
-			    );
-				});
-				
+					      	<small>${conversa.key}</small>		         
+					      </p>    
+					    </li>`  );
+				});				
 		});
 
 	});
@@ -1278,50 +1321,70 @@ function abrirConversacion(chatId, imagen, nombre) {
 	 firebase.database().ref('/conversaciones/' + conversacion).once('value').then(function(snapshot) {
  		if ( snapshot.val() ){
  			snapshot.forEach( function (childSnapshot){
- 				console.log(childSnapshot.val());
+ 				dibujarMensaje(childSnapshot.val(), childSnapshot.key, conversacion);
  			});
-
-
  		}
   	
 	});		
 
 	$(".laConversacion").attr("id", conversacion);
-	navegacion("#conversacion");
+		navegacion("#conversacion");
+	}
 
+function dibujarMensaje(objeto, clave, conversacion){
+	var mensaje = objeto;
+ 	var fecha = new Date(mensaje.fecha);
+ 	var HTMLestado='';
+ 	
+ 	switch (objeto.estado){
+ 		case 0: 
+ 			 HTMLestado +='<small><small><i class="material-icons grey-text darken-1">access_time</i></small></small>'
+ 		break;
+ 		case 1: 
+ 			 HTMLestado +='<small><small><i class="material-icons grey-text darken-1"">done</i></small></small>'
+ 		break;
+ 		case 2: 
+ 			 HTMLestado +='<small><small><i class="material-icons grey-text darken-1"">done_all</i></small></small>'
+ 		break;
+ 		case 3: 
+ 			 HTMLestado +='<small><small><i class="material-icons text-green">done_all</i></small></small>'
+ 		break;
 
+ 	} 	
+	var HTMLmensaje = 
+			`<div class="right-align mensajeEnviado " id ="${clave}">
+				<span  class="left-align z-depth-2 black-text" > 
+					${mensaje.texto} 
+					<small class="right-align grey-text darken-1 "><i>${fecha.getHours()}:${fecha.getMinutes()}</i></small>
+					${HTMLestado}
+				</span>
+			</div>`;
+	if ($("#" + clave).length > 0 ){
+		$("#" + clave).replaceWith(HTMLmensaje);
+	}else{		
+		$("#" + conversacion).append(HTMLmensaje);
+	}
 }
-
 $("#enviarMensaje").click(enviador);
 function enviador (){
 	if ($("#mensaje").val() != ""){
 		var sendMensaje ={}
 		sendMensaje.conversacion=$(".laConversacion").attr("id");
 		var fecha = new Date();
-		
 		sendMensaje.fecha=fecha;
-		console.log(fecha);
 		sendMensaje.texto = $("#mensaje").val();
-		sendMensaje.estado = 1;
+		sendMensaje.estado = 0;
 
 		$("#mensaje").val("");
 		var nuevoIdMensaje = base.ref().child('/conversaciones/' + sendMensaje.conversacion ).push().key;
-		$("#"+ sendMensaje.conversacion).append(
-			`<div class="right-align mensajeEnviado " id ="sendMensaje.conversacion">
-				<span  class="left-align z-depth-2" > 
-					${sendMensaje.texto} 
-					<small right-align><i>${fecha.getHours()}:${fecha.getMinutes()}</i></small>
-				</span>
-			</div>`);
-
-			var updates = {};
-
-			updates['/conversaciones/' + sendMensaje.conversacion +"/"+ nuevoIdMensaje ] = sendMensaje;
-			base.ref().update(updates)
-			.then(function (){
-				delete sendMensaje;
-			})
-
+		dibujarMensaje(sendMensaje, nuevoIdMensaje ,sendMensaje.conversacion );
+		sendMensaje.estado = 1;
+		var updates = {};
+		updates['/conversaciones/' + sendMensaje.conversacion +"/"+ nuevoIdMensaje ] = sendMensaje;
+		base.ref().update(updates)
+		.then(function (){
+			delete sendMensaje;
+		})
 	}
 
 

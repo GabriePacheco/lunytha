@@ -237,4 +237,21 @@ body{
  margin-right: 0.5em; 
 }
 
+.mensajeEnviado small{
+  text-align: right;
+  font-size: 0.8em !important;
+}
 
+.mensajeEnviado small i{
+  text-align: right ;
+  font-size: 1em !important;
+  vertical-align: bottom !important;
+}
+
+.navegacion{
+  position: fixed !important;
+  top:0;
+  width: 100% !important;
+  margin-bottom: 5em !important; 
+  
+}
