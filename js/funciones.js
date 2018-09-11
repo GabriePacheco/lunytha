@@ -320,17 +320,24 @@ $("#perfil").submit(function(){
 	var perfil = {};
 	if (imagenAsubir){
 		var referencia = userInLine.uid+"."+fichero.files[0].name.split(".")[1];
-		perfil.imagen = referencia;
 		storage.ref().child("imagenes/userPhoto/" + perfil.imagen).put(imagenAsubir)
 		.then(function (snap){
 				var urlImage = snap.downloadURL;	
 				Auth.currentUser.updateProfile({
 					photoURL: urlImage
 				});
+				base.ref("/users/" +  userInLine.uid ).update({
+					imagen: urlImage
+				})
+				
 		});
 
 
+	}else{
+		perfil.imagen=userInLine.photoURL
+
 	}
+
 	perfil.nombre = $("#nombre_perfil").val();
 	perfil.email = $("#email_perfil").val();
 	
@@ -1272,7 +1279,7 @@ $("#toChat").click(function (){
 	$("#listaUsuarios").html("");
 	var consulta =userInLine.uid + "_";
 	console.log(consulta);
-	var comAbiertas = base.ref("/conversaciones/").orderByKey().startAt(consulta);
+	var comAbiertas = base.ref("/conversaciones/").orderByChild().startAt(consulta);
 	
 	comAbiertas.once('value').then(function (listaConversaciones){
 		console.log(listaConversaciones.val())
