@@ -80,7 +80,7 @@
                                           
                     </div>
 
-                    <div class="col s12 center-aling">¿Olvidaste tu contraseña? <a href="#recuperar" >Recuperala aquí</a></div>
+                    <div class="col s12 center-aling">¿Olvidaste tu contraseña? <a href="#recuperar" >Obten ayuda Aquí</a></div>
                    
                   </div>
                   <div class="row">
@@ -88,19 +88,15 @@
                      <div class="col s2" ><strong>O</strong></div>
                      <div class="col s5" ><hr> </div>
                   </div>
-
-  
-
-  
                  </form>
 
                  <!-- fin formulario de registro -->
                   <div class="row">
                     <button id ="loginConFacebook" class="waves-effect waves-light btn col s12 social facebook">
-                    <i class="fa fa-facebook"></i> Inicia sesión con Facebook</button>
+                    <i class="fa fa-facebook"></i>Inicia sesión con Facebook</button>
                   </div>
                   <div class="row">
-                    <div class="col s12 center-aling">Aún no tienes Cunta   <a href="#registro" >Registrate aquí</a></div>
+                    <div class="col s12 center-aling">Aún no tienes cuenta<a href="#registro" >Registrate aquí</a></div>
                   </div>
             </div>              
           </div><!-- fin Login -->
@@ -112,7 +108,7 @@
               <div class="coll s6 offset-2">
                 
                 <h2 ><strong class="pink-text accent-2-text"><b>Lunytha</b></strong></h2>
-                  Elije una opción para ingresar.
+                Completa el REGISTRO.
               </div>
           
             </div>
@@ -150,7 +146,7 @@
                  <!-- fin formulario de registro -->
                 <div class="row">
                     <button id ="RegistrarConFacebook" class="waves-effect waves-light btn col s12 social facebook">
-                    <i class="fa fa-facebook"></i> Registrate con Facebook</button>
+                    <i class="fa fa-facebook"></i>Registro con Facebook</button>
               </div>
                 <div class="row">
                     <div class="col s12 center-aling">¿Ya tines cuenta ?<a href="#login" >Ingresa aquí</a></div>
@@ -162,17 +158,27 @@
 
           <!-- Pagina de CUENTA>-->
           <div id="cuenta" class=" appPagina hide">
-            <div class="navbar-fixed navegacion #ff80ab pink accent-1 valign-wrapper">    
-                <span id="cuentaBack" href="#home" class="white-text">&nbsp; <i class="material-icons">arrow_back</i></spna>
-                Cuenta       
-          </div>
+                  <div class="navbar-fixed  #ff80ab pink accent-1 valign-wrapper row white-text col">    
+      
+                        <span id="cuentaBack" class=" s2 left-align"><i class="material-icons">arrow_back</i></span>
+                         <span class="col s8 "> <b>Cuenta </b> </span>
+                         <span id="savePerfil" class="col s2 right-align"><i class="material-icons">done</i></span>
+                    
+                           
+                  </div>
             <div class="row">
               <form id = "perfil"> 
+                  <div class="col s12 center-align ">
+                     <div> <i class="center-aling" id="estado_perfil"></i></div>   
+                  </div>
+
                 <div id="foto" class="center-align col s6 offset-s3"></div>
                 <div class="right-align col s12" >
                    <input type="file" id="photoURL" accept="image/*" class="hide">
                    <input type="hidden" name="userId" id ="userId" >
-                  <div id = "addPhotoPerfil" class="btn-floating btn-small waves-effect waves-light #ff80ab pink accent-1 "><i class="material-icons">add_a_photo</i></div>
+                  <div id = "addPhotoPerfil" class="btn-floating btn-small waves-effect waves-light #ff80ab pink accent-1 ">
+                    <i class="material-icons">add_a_photo</i>
+                  </div>
                 </div>
                
                   <div class="row">
@@ -212,10 +218,7 @@
                       </div>           
                     
                   </div>
-                  <div class="col s12 center-align ">
-                   <div> <i class="center-aling" id="estado_perfil"></i></div>
-                      <button type="submit" class="btn waves-effect waves-light #ff80ab pink accent-1">Guardar</button>
-                  </div>
+
                 </form>
             </div>
           </div><!-- fin pagina de cuenta -->
@@ -306,7 +309,7 @@
           </div> <!--*********fin Chat ***********-->
           <!-- ******* Contactos  ************  -->
           <div id="contactos" class="appPagina hide">
-            <div class="navbar-fixed navegacion #ff80ab pink accent-1 valign-wrapper">    
+            <div class="navbar-fixed  #ff80ab pink accent-1 valign-wrapper">    
                   <a href="#chat" class="white-text"> <i class="material-icons">arrow_back</i></a>   
                   <strong> Contactos</strong>
           </div>
@@ -325,7 +328,7 @@
           <!--**********Conversacion ***********-->
           <div id="conversacion" class="appPagina hide">
 
-                <div class="navbar-fixed  navegacion #ff80ab pink accent-1 valign-wrapper">               
+                <div class="navbar-fixed   #ff80ab pink accent-1 valign-wrapper">               
                   <a href="#chat" class="white-text"> <i class="material-icons">arrow_back</i></a>
                   <img id ="chatImagen" src="" alt="" class="circle" width="35em"  height="35em">
                   <strong id="chatNombre"> </strong>
@@ -345,7 +348,7 @@
 
              <!--**********Conversacion ***********-->
           <div id="verPost" class="appPagina hide">
-          <div class="navbar-fixed navegacion #ff80ab pink accent-1 valign-wrapper">    
+          <div class="navbar-fixed  #ff80ab pink accent-1 valign-wrapper">    
                 <a href="#home" class="white-text"> <i class="material-icons">arrow_back</i></a>      
           </div>
             <div class="contenido"></div>

@@ -210,12 +210,14 @@ $("a").click(function (){
 //6.- Ffija la barra de navegación cuando baja el scrol
 $(document).scroll(function (){
 	
-	if ($(document).scrollTop() >= 50   ){
+	if ($(document).scrollTop() >= 80  ){
 		$("#nav").addClass("navbar-fixed");
 		$(".nav-wrapper").addClass("hide");
+		$(".navbar-fixed").addClass("navegacion");
 	}else{
 		$("#nav").removeClass("navbar-fixed");
 		$(".nav-wrapper").removeClass("hide");
+		$(".navbar-fixed").removeClass("navegacion");
 	}
 
 });
@@ -309,6 +311,9 @@ $("#photoURL").change(function (e){
 });
 
 //7.3 .- Guardamos el perfil
+$("#savePerfil").click(
+	function (){$("#perfil").submit()}
+);
 $("#perfil").submit(function(){
 	var fichero = document.getElementById("photoURL");
 	var imagenAsubir = fichero.files[0];
@@ -322,15 +327,10 @@ $("#perfil").submit(function(){
 				Auth.currentUser.updateProfile({
 					photoURL: urlImage
 				});
-				base.ref("/users/" +  $("#userId").val() ).update({
-					imagen: urlImage
-				});
 		});
 
 
 	}
-
-
 	perfil.nombre = $("#nombre_perfil").val();
 	perfil.email = $("#email_perfil").val();
 	
@@ -1270,8 +1270,9 @@ function abrirPost(postId){
 $("#toChat").click(function (){
 	$("#listaConversaciones").html("");
 	$("#listaUsuarios").html("");
-
-	var comAbiertas = base.ref("/conversaciones/").orderByKey().startAt( userInLine.uid + "_");
+	var consulta =userInLine.uid + "_";
+	console.log(consulta);
+	var comAbiertas = base.ref("/conversaciones/").orderByKey().startAt(consulta);
 	
 	comAbiertas.once('value').then(function (listaConversaciones){
 		console.log(listaConversaciones.val())
