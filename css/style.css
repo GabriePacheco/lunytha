@@ -248,6 +248,26 @@ body{
   vertical-align: bottom !important;
 }
 
+
+
+.mensajeRecivido{
+  margin-top: 1em !important;
+  margin-left: 0.5em !important;
+}
+
+.mensajeRecivido span{
+  background: #FFFFFF; 
+  padding: 0.5em;
+  max-width: 60% !important;
+  margin-right: 0.5em; 
+}
+
+.mensajeRecivido small i{
+  text-align: right ;
+  font-size: 1em !important;
+  vertical-align: bottom !important;
+}
+
 .navegacion{
   position: fixed !important;
   top:0;

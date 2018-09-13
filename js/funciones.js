@@ -213,11 +213,11 @@ $(document).scroll(function (){
 	if ($(document).scrollTop() >= 80  ){
 		$("#nav").addClass("navbar-fixed");
 		$(".nav-wrapper").addClass("hide");
-		$(".navbar-fixed").addClass("navegacion");
+		
 	}else{
 		$("#nav").removeClass("navbar-fixed");
 		$(".nav-wrapper").removeClass("hide");
-		$(".navbar-fixed").removeClass("navegacion");
+		
 	}
 
 });
@@ -523,7 +523,7 @@ $("#postSend").click(async function (){
 		}
 	
 
-		var fecha = new Date();
+		var fecha = firebase.database.ServerValue.TIMESTAMP;
 		postData.fecha = fecha; 
 		
 		postData.likes=0;
@@ -896,7 +896,6 @@ function like (id, totaldelikes){
 
 //14.- Borrar el POST
 async function  reciclar(postId){
-
 	new Promise((resolver, rechazar) => {
     $("#" + postId).remove();	
     	var postBorrar = base.ref('posts/' + postId);
@@ -1277,32 +1276,31 @@ function abrirPost(postId){
 $("#toChat").click(function (){
 	$("#listaConversaciones").html("");
 	$("#listaUsuarios").html("");
-	var consulta =userInLine.uid + "_";
-	console.log(consulta);
-	var comAbiertas = base.ref("/conversaciones/").orderByChild().startAt(consulta);
-	
-	comAbiertas.once('value').then(function (listaConversaciones){
-		console.log(listaConversaciones.val())
-		listaConversaciones.forEach(function (conversa){
-				var id = conversa.key.split("_")[1];			
-				base.ref("/users/" + id).on("value", function (snap){
-					var userConversa =  snap.val();				
-					$("#listaConversaciones").append(`<li class="collection-item avatar" data-id="${snap.key}" onClick="abrirConversacion('${snap.key}' , '${userConversa.imagen}', '${userConversa.nombre}')">
-			      		<img src="${userConversa.imagen}" alt="${userConversa.nombre}" class="circle">
-					      <span class="title">${userConversa.nombre}</span>
-					      <p>
-					      	<small>${conversa.key}</small>		         
-					      </p>    
-					    </li>`  );
-				});				
-		});
+	var chatsAbiertos = base.ref("/chat/" + userInLine.uid).orderByKey();
+	chatsAbiertos.on("value", function (snap){
+		snap.forEach((conver) => {
+			base.ref().child("/users/" + conver.key).once("value")
+			.then(function (us){
+				$("#listaConversaciones").append(`
+				<li class="collection-item avatar" data-id="${us.key}" onClick="abrirConversacion('${us.key}', '${us.val().imagen}', '${us.val().nombre}')">
+			      <img src="${us.val().imagen}" alt="${us.val().nombre}" class="circle">
+			      <span class="title">${us.val().nombre}</span>
+			      <p>
+			      	<small>${us.val().rol}</small>		         
+			      </p>
+			    
+			    </li>
+					`);
+			});
 
+		 	
+		})
 	});
+		
 
-	
 	var listaUsuarios = base.ref().child("users");
 	listaUsuarios.once("value").then(function (listaU){
-		 listaU.forEach(function(childListaU) {
+		listaU.forEach(function(childListaU) {
 
 		 let contacto= childListaU.val()
 		 if (childListaU.key != userInLine.uid){
@@ -1325,76 +1323,78 @@ $("#toChat").click(function (){
 function abrirConversacion(chatId, imagen, nombre) {
 	$("#chatNombre").html(" " + nombre);
 	$("#chatImagen").attr("src", imagen);
-	var conversacion=  userInLine.uid + '_' +chatId;
-	 firebase.database().ref('/conversaciones/' + conversacion).once('value').then(function(snapshot) {
- 		if ( snapshot.val() ){
- 			snapshot.forEach( function (childSnapshot){
- 				dibujarMensaje(childSnapshot.val(), childSnapshot.key, conversacion);
- 			});
- 		}
-  	
-	});		
-
-	$(".laConversacion").attr("id", conversacion);
-		navegacion("#conversacion");
-	}
+	$("#conversacionMensajes").html("");
+	var conversacion=chatId;
+	base.ref('chat/').child(userInLine.uid + "/" + conversacion).on("child_added", function (mensajes){
+		dibujarMensaje(mensajes.val(), mensajes.key, chatId )
+	})
+	$("#conversacionMensajes").attr("data-id", conversacion);	
+	navegacion("#conversacion");
+}
 
 function dibujarMensaje(objeto, clave, conversacion){
 	var mensaje = objeto;
  	var fecha = new Date(mensaje.fecha);
- 	var HTMLestado='';
- 	
- 	switch (objeto.estado){
- 		case 0: 
- 			 HTMLestado +='<small><small><i class="material-icons grey-text darken-1">access_time</i></small></small>'
- 		break;
- 		case 1: 
- 			 HTMLestado +='<small><small><i class="material-icons grey-text darken-1"">done</i></small></small>'
- 		break;
- 		case 2: 
- 			 HTMLestado +='<small><small><i class="material-icons grey-text darken-1"">done_all</i></small></small>'
- 		break;
- 		case 3: 
- 			 HTMLestado +='<small><small><i class="material-icons text-green">done_all</i></small></small>'
- 		break;
 
- 	} 	
-	var HTMLmensaje = 
-			`<div class="right-align mensajeEnviado " id ="${clave}">
+ 	var HTMLestado='';
+ 	var clase_mensaje=' mensajeRecivido';
+	if (mensaje.IdEnviador == userInLine.uid){ 	
+	 	switch (objeto.estado){
+	 		case 0: 
+	 			 HTMLestado +='<small><small><i class="material-icons grey-text darken-1">access_time</i></small></small>'
+	 		break;
+	 		case 1: 
+	 			 HTMLestado +='<small><small><i class="material-icons grey-text darken-1"">done</i></small></small>'
+	 		break;
+	 		case 2: 
+	 			 HTMLestado +='<small><small><i class="material-icons grey-text darken-1"">done_all</i></small></small>'
+	 		break;
+	 		case 3: 
+	 			 HTMLestado +='<small><small><i class="material-icons text-green">done_all</i></small></small>'
+	 		break;
+	 	} 	
+	 	clase_mensaje= "right-align mensajeEnviado";
+	 }
+     var HTMLmensaje = 
+			`<div class="${clase_mensaje}" id ="${clave}">
 				<span  class="left-align z-depth-2 black-text" > 
 					${mensaje.texto} 
 					<small class="right-align grey-text darken-1 "><i>${fecha.getHours()}:${fecha.getMinutes()}</i></small>
 					${HTMLestado}
 				</span>
 			</div>`;
-	if ($("#" + clave).length > 0 ){
+	 if ($("#" + clave).length > 0 ){
 		$("#" + clave).replaceWith(HTMLmensaje);
-	}else{		
-		$("#" + conversacion).append(HTMLmensaje);
-	}
+ 	 }else{		
+		$("#conversacionMensajes").append(HTMLmensaje);
+	 }
 }
 $("#enviarMensaje").click(enviador);
 function enviador (){
 	if ($("#mensaje").val() != ""){
-		var sendMensaje ={}
-		sendMensaje.conversacion=$(".laConversacion").attr("id");
+		var sendMensaje ={}		
 		var fecha = new Date();
 		sendMensaje.fecha=fecha;
 		sendMensaje.texto = $("#mensaje").val();
 		sendMensaje.estado = 0;
-
+		sendMensaje.IdEnviador= userInLine.uid;
+		sendMensaje.IdRecividor= $("#conversacionMensajes").attr("data-id") ;
+	
 		$("#mensaje").val("");
-		var nuevoIdMensaje = base.ref().child('/conversaciones/' + sendMensaje.conversacion ).push().key;
+		var nuevoIdMensaje = base.ref().child('/chat/' + sendMensaje.IdRecividor + '/' +userInLine.uid ).push().key;
 		dibujarMensaje(sendMensaje, nuevoIdMensaje ,sendMensaje.conversacion );
+		sendMensaje.fecha = firebase.database.ServerValue.TIMESTAMP;
 		sendMensaje.estado = 1;
 		var updates = {};
-		updates['/conversaciones/' + sendMensaje.conversacion +"/"+ nuevoIdMensaje ] = sendMensaje;
+		updates['/chat/' + sendMensaje.IdRecividor +"/" + userInLine.uid + "/"+ nuevoIdMensaje ] = sendMensaje;
 		base.ref().update(updates)
 		.then(function (){
-			delete sendMensaje;
+			updates['/chat/' + userInLine.uid +"/"+ sendMensaje.IdRecividor + "/" +nuevoIdMensaje ] = sendMensaje;		
+			base.ref().update(updates);
 		})
+		.then(function (){
+			delete sendMensaje;
+		});
 	}
-
-
 
 }
