@@ -1341,16 +1341,16 @@ function dibujarMensaje(objeto, clave, conversacion){
 	if (mensaje.IdEnviador == userInLine.uid){ 	
 	 	switch (objeto.estado){
 	 		case 0: 
-	 			 HTMLestado +='<small><small><i class="material-icons grey-text darken-1">access_time</i></small></small>'
+	 			 HTMLestado +='<small><i class="material-icons grey-text darken-1">access_time</i></small>'
 	 		break;
 	 		case 1: 
-	 			 HTMLestado +='<small><small><i class="material-icons grey-text darken-1"">done</i></small></small>'
+	 			 HTMLestado +='<small><i class="material-icons grey-text darken-1"">done</i></small>'
 	 		break;
 	 		case 2: 
-	 			 HTMLestado +='<small><small><i class="material-icons grey-text darken-1"">done_all</i></small></small>'
+	 			 HTMLestado +='<small><i class="material-icons grey-text darken-1"">done_all</i></small>'
 	 		break;
 	 		case 3: 
-	 			 HTMLestado +='<small><small><i class="material-icons text-green">done_all</i></small></small>'
+	 			 HTMLestado +='<small><i class="material-icons text-green">done_all</i></small>'
 	 		break;
 	 	} 	
 	 	clase_mensaje= "right-align mensajeEnviado";
@@ -1378,6 +1378,8 @@ function enviador (){
 		sendMensaje.texto = $("#mensaje").val();
 		sendMensaje.estado = 0;
 		sendMensaje.IdEnviador= userInLine.uid;
+		sendMensaje.NombreEnviador= userInLine.nombre;
+		sendMensaje.ImagenEnviador= userInLine.imagen;
 		sendMensaje.IdRecividor= $("#conversacionMensajes").attr("data-id") ;
 	
 		$("#mensaje").val("");
@@ -1386,12 +1388,8 @@ function enviador (){
 		sendMensaje.fecha = firebase.database.ServerValue.TIMESTAMP;
 		sendMensaje.estado = 1;
 		var updates = {};
-		updates['/chat/' + sendMensaje.IdRecividor +"/" + userInLine.uid + "/"+ nuevoIdMensaje ] = sendMensaje;
+		updates['/chat/' + userInLine.uid  +"/" + sendMensaje.IdRecividor + "/"+ nuevoIdMensaje ] = sendMensaje;
 		base.ref().update(updates)
-		.then(function (){
-			updates['/chat/' + userInLine.uid +"/"+ sendMensaje.IdRecividor + "/" +nuevoIdMensaje ] = sendMensaje;		
-			base.ref().update(updates);
-		})
 		.then(function (){
 			delete sendMensaje;
 		});
