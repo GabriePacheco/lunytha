@@ -23,7 +23,7 @@
        <nav class="nav-extended #ff80ab pink accent-2">
             <div class="nav-wrapper">
               <a href="#" class="brand-logo">Lunytha</a>
-              <a href="#" data-target="mobile-demo" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+              <a href="#" data-target="mobile-demo" class="sidenav-trigger" data-aciones ="true"><i class="material-icons">menu</i></a>
               <ul id="nav-mobile" class="right hide-on-med-and-down">
                 <li><a href="#home">Inicio</a></li>
                 <li><a href="#cuenta">Cuenta</a></li>
@@ -35,7 +35,7 @@
                 <!-- <li class="tab"><a href="#test1"><i class="material-icons">camera_alt</i></a></li>-->
                 <li class="tab"  class="active" ><a  class="active" href="#home"><i class="material-icons">public</i></a></li>
                  <li class="tab"><a id ="toChat"  href="#chat"><i class="material-icons">message</i></a></li> 
-                 <li class="tab"><a href="#test4"><i class="material-icons">history</i></a></li>
+                 <li class="tab"><a id = "toHistorias" href="#historias"><i class="material-icons">history</i></a></li>
               </ul>
             </div>
       </nav>
@@ -158,7 +158,7 @@
 
           <!-- Pagina de CUENTA>-->
           <div id="cuenta" class=" appPagina hide">
-                  <div class="navbar-fixed  #ff80ab pink accent-1 valign-wrapper row white-text col">    
+                  <div class="navbar-fixed navegacion  #ff80ab pink accent-1 valign-wrapper row white-text ">    
       
                         <span id="cuentaBack" class=" s2 left-align"><i class="material-icons">arrow_back</i></span>
                          <span class="col s8 "> <b>Cuenta </b> </span>
@@ -166,7 +166,7 @@
                     
                            
                   </div>
-            <div class="row">
+            <div class="row" >
               <form id = "perfil"> 
                   <div class="col s12 center-align ">
                      <div> <i class="center-aling" id="estado_perfil"></i></div>   
@@ -174,7 +174,7 @@
 
                 <div id="foto" class="center-align col s6 offset-s3"></div>
                 <div class="right-align col s12" >
-                   <input type="file" id="photoURL" accept="image/*" class="hide">
+                   <input type="file" id="photoURL" accept="image/*"  capture="camera" class="hide">
                    <input type="hidden" name="userId" id ="userId" >
                   <div id = "addPhotoPerfil" class="btn-floating btn-small waves-effect waves-light #ff80ab pink accent-1 ">
                     <i class="material-icons">add_a_photo</i>
@@ -302,42 +302,46 @@
             <ul id="listaConversaciones" class="collection">     
             </ul>
             <div class="fixed-action-btn">
-              <a href ="#contactos" class="btn-floating btn-large  #ff80ab pink accent-1">
+              <a href ="#contactos" id="ChatAddContacto" class="btn-floating btn-large  #ff80ab pink accent-1">
                 <i class="large material-icons">add_comment</i>
               </a>
             </div>
           </div> <!--*********fin Chat ***********-->
           <!-- ******* Contactos  ************  -->
           <div id="contactos" class="appPagina hide">
-            <div class="navbar-fixed  #ff80ab pink accent-1 valign-wrapper">    
-                  <a href="#chat" class="white-text"> <i class="material-icons">arrow_back</i></a>   
-                  <strong> Contactos</strong>
-          </div>
+            <div class="navbar-fixed navegacion  #ff80ab pink accent-1 valign-wrapper row white-text">    
+              <span class="col s1 center-align backChat"><i class="material-icons">arrow_back</i> </span>
+              <span class="col s9 left-align">
+                <b>Conctactos </b>           
+                 <div id="chatBuscarContacto" class="input-field blue-text hide">
+                     <input id="buscaNombre" class="validate white-text "  / placeholder="Buscar nombre" >
+                
+                    
+                  </div>  
+                </span>    
+              <span id="irBuscar" class="col s2 right-align"><i class="material-icons prefix">search</i></span>                      
+            </div>
     
-          <div class="input-field col s12">
-            <i class="material-icons prefix">search</i>
-            <input id="BuscaNombre" class="validate" / >
-            <label for="BuscaNombre">Buscar nombre</label>
-          </div>
+
            
-            <ul id="listaUsuarios" class="collection">     
+            <ul id="listaUsuarios" class="collection">    
             </ul>
             
           </div><!-- Fin CPntactps -->
 
           <!--**********Conversacion ***********-->
           <div id="conversacion" class="appPagina hide">
-
-                <div class="navbar-fixed   #ff80ab pink accent-1 valign-wrapper">               
-                  <a href="#chat" class="white-text"> <i class="material-icons">arrow_back</i></a>
-                  <img id ="chatImagen" src="" alt="" class="circle" width="35em"  height="35em">
-                  <strong id="chatNombre"> </strong>     
-               </div>
+            <div class="navbar-fixed navegacion  #ff80ab pink accent-1 valign-wrapper row white-text">    
+              <span class="col s1 center-align  backChat"><i class="material-icons">arrow_back</i> </span>
+              <span class="col s9 left-align valign-wrapper"><img id ="chatImagen"  class="circle" width="35em" height="35em"/>&nbsp;<b id ="chatNombre"></b>  </span>    
+              <span class="col s2 right-align"></span>                      
+            </div>
             <div id="conversacionMensajes">          
             </div>
-            <div class="preMensaje ">
+            <div class="preMensaje  valign-wrapper">
                 <i id ="camaraMensaje" class="material-icons">camera_alt</i>
-                <textarea id="mensaje" class="materialize-textarea" placeholder="Escribe un mensaje"></textarea><i id ="adjuntoMensaje" class="material-icons">attach_file</i>
+                <input type="file" name="mensajeImagen" id ="mensajeImagen"  accept="image/*" capture="camera" class="hide">
+                <textarea id="mensaje" class="materialize-textarea" placeholder="Escribe un mensaje"></textarea>
                 <i id ="enviarMensaje" class="material-icons">send</i>
             </div>
           </div> <!--*********fin Conversación ***********-->
@@ -349,7 +353,34 @@
           </div>
             <div class="contenido"></div>
           </div> <!--*********fin Conversación ***********-->
+          <!--*************** Historias************* -->
+          <div id ="historias" class="appPagina hide">
+            <div class="navbar-fixed navegacion  #ff80ab pink accent-1 valign-wrapper row white-text">    
+              <span class="col s1 center-align"><a href="#home" class="white-text"><i class="material-icons">arrow_back</i></a> </span>
+              <span class="col s9 left-align valign-wrapper"><b>Historias</b>  </span>    
+              <span class="col s2 right-align"></span>                      
+            </div>
+            <div id ="historial">
+              <ul id="addHistoria" class="collection">
+                <li class="collection-item avatar">
+                  <img id ="historiaImagen" src="" alt="" class="circle">
+                  <span class="title"></span>
+                    <p><i class="material-icons green-text light-2">add_circle</i><b> Mi Historia </b><br>
+                     <small>Añade una actualización</small>
+                  </p>
+                </li>    
+               </ul>
+               <h6>Recientes</h6> 
+               <input type="file" name="imagenHistoria" id="imagenHistoria" accept="image/*" capture="camera" class="hide">
+               <ul id="listaHistorias" class="collection">
+                  cargando...
+               </ul>        
 
+              
+            </div>
+            
+          </div><!-- fin historias--->
+    
            
 
   

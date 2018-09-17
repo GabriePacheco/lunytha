@@ -250,6 +250,7 @@ function getPerfil(usuario){
 		$("#foto").prepend("<h1><i class='large material-icons'>account_circle</i></h1>");
 	}else{
 		$("#foto").html("<h1><img src='"+ usuario.photoURL + "' class='circle' width='150em' height='150em' /></h1>");
+		$("#historiaImagen").attr("src", usuario.photoURL);
 	}
 	if (usuario.phoneNumber != null){
 		$("#telefono").val()=usuario.phoneNumber ;
@@ -265,6 +266,7 @@ function getPerfil(usuario){
 			$("#estudiante").val( snapshot.val().estudiante);
 			$("#telefono").val( snapshot.val().telefono);
 			$("#rol").prop("checked", true);
+
 		 }
 	
 		if (snapshot.val().permisos >= config2.acceso){
@@ -320,7 +322,7 @@ $("#perfil").submit(function(){
 	var perfil = {};
 	if (imagenAsubir){
 		var referencia = userInLine.uid+"."+fichero.files[0].name.split(".")[1];
-		storage.ref().child("imagenes/userPhoto/" + perfil.imagen).put(imagenAsubir)
+		storage.ref().child("imagenes/userPhoto/"  + referencia).put(imagenAsubir)
 		.then(function (snap){
 				var urlImage = snap.downloadURL;	
 				Auth.currentUser.updateProfile({
@@ -334,7 +336,7 @@ $("#perfil").submit(function(){
 
 
 	}else{
-		perfil.imagen=userInLine.photoURL
+		perfil.imagen=userInLine.imagen;
 
 	}
 
@@ -1274,29 +1276,12 @@ function abrirPost(postId){
 	navegacion("#verPost");
 }
 $("#toChat").click(function (){
-	$("#listaConversaciones").html("");
-	$("#listaUsuarios").html("");
-	var chatsAbiertos = base.ref("/chat/" + userInLine.uid).orderByKey();
-	chatsAbiertos.on("value", function (snap){
-		snap.forEach((conver) => {
-			base.ref().child("/users/" + conver.key).once("value")
-			.then(function (us){
-				$("#listaConversaciones").append(`
-				<li class="collection-item avatar" data-id="${us.key}" onClick="abrirConversacion('${us.key}', '${us.val().imagen}', '${us.val().nombre}')">
-			      <img src="${us.val().imagen}" alt="${us.val().nombre}" class="circle">
-			      <span class="title">${us.val().nombre}</span>
-			      <p>
-			      	<small>${us.val().rol}</small>		         
-			      </p>
-			    
-			    </li>
-					`);
-			});
+	bConversaciones();	
+	
+});
 
-		 	
-		})
-	});
-		
+$("#ChatAddContacto").click(listarContactos);
+function listarContactos(){
 
 	var listaUsuarios = base.ref().child("users");
 	listaUsuarios.once("value").then(function (listaU){
@@ -1318,14 +1303,20 @@ $("#toChat").click(function (){
 		
 	
 	});
-});
+
+}
 
 function abrirConversacion(chatId, imagen, nombre) {
-	$("#chatNombre").html(" " + nombre);
+	$("#chatNombre").html(" &nbsp;" + nombre);
 	$("#chatImagen").attr("src", imagen);
 	$("#conversacionMensajes").html("");
 	var conversacion=chatId;
-	base.ref('chat/').child(userInLine.uid + "/" + conversacion).on("child_added", function (mensajes){
+
+	var escucharConversacion = base.ref('chat/').child(userInLine.uid + "/" + conversacion).limitToLast(100);
+	escucharConversacion.on("child_added", function (mensajes){
+		dibujarMensaje(mensajes.val(), mensajes.key, chatId )
+	})
+		escucharConversacion.on("child_changed", function (mensajes){
 		dibujarMensaje(mensajes.val(), mensajes.key, chatId )
 	})
 	$("#conversacionMensajes").attr("data-id", conversacion);	
@@ -1337,7 +1328,16 @@ function dibujarMensaje(objeto, clave, conversacion){
  	var fecha = new Date(mensaje.fecha);
 
  	var HTMLestado='';
+ 	var HTMLtexto ='';
+ 	var HTMLImagen='';
  	var clase_mensaje=' mensajeRecivido';
+ 	if (mensaje.texto){
+ 		HTMLtexto = mensaje.texto;
+ 	}
+ 	if (mensaje.imagen ){
+
+ 		HTMLImagen = `<img src="${mensaje.imagen}" />`;
+ 	}
 	if (mensaje.IdEnviador == userInLine.uid){ 	
 	 	switch (objeto.estado){
 	 		case 0: 
@@ -1357,17 +1357,20 @@ function dibujarMensaje(objeto, clave, conversacion){
 	 }
      var HTMLmensaje = 
 			`<div class="${clase_mensaje}" id ="${clave}">
-				<span  class="left-align z-depth-2 black-text" > 
-					${mensaje.texto} 
+				<div class="left-align z-depth-2 black-text" > 
+					${HTMLtexto} 
+					${HTMLImagen} 
 					<small class="right-align grey-text darken-1 "><i>${fecha.getHours()}:${fecha.getMinutes()}</i></small>
 					${HTMLestado}
-				</span>
+				</div>
 			</div>`;
 	 if ($("#" + clave).length > 0 ){
 		$("#" + clave).replaceWith(HTMLmensaje);
  	 }else{		
 		$("#conversacionMensajes").append(HTMLmensaje);
 	 }
+	 $("#conversacionMensajes").scrollTop($('#conversacionMensajes')[0].scrollHeight);
+
 }
 $("#enviarMensaje").click(enviador);
 function enviador (){
@@ -1383,6 +1386,7 @@ function enviador (){
 		sendMensaje.IdRecividor= $("#conversacionMensajes").attr("data-id") ;
 	
 		$("#mensaje").val("");
+		$("#mensaje").css({"height": "1em"});
 		var nuevoIdMensaje = base.ref().child('/chat/' + sendMensaje.IdRecividor + '/' +userInLine.uid ).push().key;
 		dibujarMensaje(sendMensaje, nuevoIdMensaje ,sendMensaje.conversacion );
 		sendMensaje.fecha = firebase.database.ServerValue.TIMESTAMP;
@@ -1392,7 +1396,153 @@ function enviador (){
 		base.ref().update(updates)
 		.then(function (){
 			delete sendMensaje;
+
 		});
 	}
 
 }
+$(".backChat").click(bConversaciones);
+	function bConversaciones(){
+
+	$("#listaConversaciones").html("");
+	$("#listaUsuarios").html("");	
+	var chatsAbiertos = base.ref("/chat/" + userInLine.uid).orderByKey();
+		chatsAbiertos.once("value").then(function (snap){
+			snap.forEach((conver) => {
+				base.ref().child("/users/" + conver.key).once("value")
+				.then(function (us){
+					$("#listaConversaciones").append(`
+					<li class="collection-item avatar" data-id="${us.key}" onClick="abrirConversacion('${us.key}', '${us.val().imagen}', '${us.val().nombre}')">
+				      <img src="${us.val().imagen}" alt="${us.val().nombre}" class="circle">
+				      <span class="title">${us.val().nombre}</span>
+				      <p>
+				      	<small>${us.val().rol}</small>		         
+				      </p>
+				    
+				    </li>
+						`);
+				});
+			})
+		});
+	navegacion("#chat");
+}
+
+$("#irBuscar").click(function (){
+
+	if ($("#chatBuscarContacto").hasClass('hide')){
+			$("#chatBuscarContacto").removeClass('hide');
+			$("#buscarNombre").focus();
+
+	}else{
+		$("#chatBuscarContacto").addClass('hide');
+		$("#buscarNombre").val("");
+	}
+});
+$("#camaraMensaje").click(function(event){
+	$("#mensajeImagen").click();
+});
+$("#mensajeImagen").change(manejadorDeImagenesChat);
+function manejadorDeImagenesChat (e){
+	var archivo = e.target.files[0];
+	var imagen = URL.createObjectURL(archivo);
+	var mensajeConImagen = {} 
+	if (archivo){
+		var sendMensaje ={}		
+		var fecha = new Date();
+		sendMensaje.fecha=fecha;
+		sendMensaje.imagen = imagen;
+		sendMensaje.estado = 0;
+		sendMensaje.IdEnviador= userInLine.uid;
+		sendMensaje.NombreEnviador= userInLine.nombre;
+		sendMensaje.ImagenEnviador= userInLine.imagen;
+		sendMensaje.IdRecividor= $("#conversacionMensajes").attr("data-id") ;
+	
+		$("#mensaje").val("");
+		$("#mensaje").css({"height": "1em"});
+		var nuevoIdMensaje = base.ref().child('/chat/' + sendMensaje.IdRecividor + '/' +userInLine.uid ).push().key;
+		dibujarMensaje(sendMensaje, nuevoIdMensaje ,sendMensaje.conversacion );
+		sendMensaje.fecha = firebase.database.ServerValue.TIMESTAMP;
+		sendMensaje.estado = 1;
+		var updates = {};
+
+		console.log(archivo.name.split(".")[1]);	
+		var imagenMensaje = storage.ref("/imagenes/mensajes/" +  nuevoIdMensaje +"."+archivo.name.split(".")[1] )
+	.put(archivo);
+		imagenMensaje.on("state_changed", function (snapshot){
+			var progreso = (snapshot.bytesTransferred  / snapshot.totalBytes) * 100 ;
+			console.log(progreso);
+			if ($("#prog").length > 0){
+			$("#prog").replaceWith(`<div id="prog" class="progress">
+		      <div class="determinate" style="width: ${progreso}%"></div>
+		  		</div>`);
+
+
+			}else{
+			$("#"+nuevoIdMensaje).append(`<div id="prog" class="progress">
+		      			<div class="determinate" style="width: ${progreso}%"></div>
+		  		</div>`);
+			}
+
+		}, function (error){
+			console.log("ocurio un error : " + error.message);
+		}, function (){
+			 imagenMensaje.snapshot.ref.getDownloadURL().then(function(downloadURL) {
+			 	sendMensaje.imagen = downloadURL;
+					updates['/chat/' + userInLine.uid  +"/" + sendMensaje.IdRecividor + "/"+ nuevoIdMensaje ] = sendMensaje;
+					base.ref().update(updates)
+					.then(function (){
+						delete sendMensaje;
+
+					});
+			   
+			  });
+		});
+		
+	}
+
+}
+$("#addHistoria").click(function (){
+	$("#imagenHistoria").click();
+});
+$("#imagenHistoria").change(addHistoria);
+function addHistoria(e){
+	var archivo = e.target.files[0];
+	if (archivo){
+		var historia = {}
+		historia.fecha=firebase.database.ServerValue.TIMESTAMP;
+		historia.uid = userInLine.uid;
+		historia.uNombre =userInLine.nombre;
+		historia.uImagen= userInLine.imagen;
+
+		var newHistoria = base.ref().child("/historias/" + userInLine.uid ).push().key;
+		var subirHistoria = storage.ref("/imagenes/historias/"+userInLine.uid+"/" + newHistoria+"."+archivo.name.split(".")[1] )
+		.put(archivo);
+
+		subirHistoria.on("state_changed", function (snapshot){
+			var progreso = (snapshot.bytesTransferred  / snapshot.totalBytes) * 100 ;
+
+
+		}, function (error){
+			console.log("Ocurrio un error : " + error.message );
+		}, 
+		function (){
+			subirHistoria.snapshot.ref.getDownloadURL().then(function (downloadURL){
+				historia.imagen = downloadURL;
+				base.ref().child("/historias/" + userInLine.uid +"/"+newHistoria).update(historia)
+				.then(()=> {
+					delete historia;
+				})
+
+			});
+		}
+
+		);
+
+	}
+
+	
+}
+
+$("#toHistorias").click(function (){
+
+});

@@ -215,26 +215,37 @@ body{
 .preMensaje{
    position: fixed !important;
    width: 96%;
-   bottom: 0.5em; 
+   bottom: 0; 
    margin: 0.5em;
    background: #FFFFFF;
-   padding: 0.5em;
+   padding: 0.2em;
    -moz-border-radius: .5em;
   -webkit-border-radius:.5em;
  
 }
 .preMensaje textarea { 
-  width: 73% !important ;
+  width: 85% !important ;
   border: none !important;
 }
 .mensajeEnviado{
   margin-top: 1em !important;
+  display: block;
+
 }
-.mensajeEnviado span{
+
+.mensajeEnviado img{
+  width: 20em;
+  height: 20em;
+  max-height: 20em;
+}
+.mensajeEnviado div{
+  margin: auto;
+  margin-right: 0.5em;
   background: #fce4ec; 
   padding: 0.5em;
+  width: max-content  !important;
   max-width: 60% !important;
- margin-right: 0.5em; 
+  overflow: hidden;
 }
 
 .mensajeEnviado small{
@@ -252,20 +263,32 @@ body{
 
 .mensajeRecivido{
   margin-top: 1em !important;
-  margin-left: 0.5em !important;
+ 
 }
 
-.mensajeRecivido span{
+.mensajeRecivido div{
   background: #FFFFFF; 
   padding: 0.5em;
+  margin: auto;
+  width: max-content  !important;
+  margin-left: 0.5em !important;
   max-width: 60% !important;
-  margin-right: 0.5em; 
+  overflow: hidden;
+  
 }
 
 .mensajeRecivido small i{
+  margin: auto;
+  margin-right: 0.5em;
   text-align: right ;
   font-size: 1em !important;
   vertical-align: bottom !important;
+}
+
+.mensajeRecivido img{
+  width: 20em;
+  height: 20em;
+  max-height: 20em;
 }
 
 .navegacion{
@@ -274,4 +297,25 @@ body{
   width: 100% !important;
   margin-bottom: 5em !important; 
   
+}
+
+#conversacionMensajes{
+  margin-top:  4em;
+  height: 34.5em !important ;
+  max-height: 34.5em !important;
+  overflow-y:auto;
+  overflow-x:hidden;
+
+}
+
+#perfil{
+  margin-top: 5em;
+
+
+}
+#listaUsuarios{
+  margin-top: 5em;  
+}
+#historial{
+   margin-top: 5em; 
 }
