@@ -9,6 +9,7 @@
          <link type="text/css" rel="stylesheet" href="materialize-social.css" />
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
         <link href="css/style.css" type="text/css" rel="stylesheet" media="screen,projection" />
+        <link rel="icon" ttype="image/png" href="logo.png" sizes="16x16 24x24 36x36 48x48" />
   
 
       <!--Let browser know website is optimized for mobile-->
@@ -34,7 +35,7 @@
               <ul class="tabs tabs-transparent #ff80ab pink accent-1">
                 <!-- <li class="tab"><a href="#test1"><i class="material-icons">camera_alt</i></a></li>-->
                 <li class="tab"  class="active" ><a  class="active" href="#home"><i class="material-icons">public</i></a></li>
-                 <li class="tab"><a id ="toChat"  href="#chat"><i class="material-icons">message</i></a></li> 
+                 <li class="tab"> <a id ="toChat"  href="#chat"><i id="mb" class="material-icons">message</i></a></li>  
                  <li class="tab"><a id = "toHistorias" href="#historias"><i class="material-icons">history</i></a></li>
               </ul>
             </div>
@@ -44,11 +45,54 @@
           <ul class="sidenav" id="mobile-demo">
             <li><a href="#home"><i class="material-icons">public</i>Inico</a></li>
             <li><a href="#cuenta"><i class="material-icons">account_circle</i>Cuenta</a></li>
-            <li><a href="#config"><i class="material-icons">settings</i>Configuración</a></li>
+            <li><a href="#confi"><i class="material-icons">settings</i>Configuración</a></li>
             <li><a id="cerrar"><i class="material-icons">clear</i>Cerrar sesión</a></li>
           </ul>
 
         <div id = "app" > <!-- contenedor de la app -->
+			<!--Confi-->
+        	<div id = "confi" class="appPagina hide ">
+
+	        	<div class="navbar-fixed navegacion  #ff80ab pink accent-1 valign-wrapper row white-text">    
+	              <span class="col s1 center-align"><a href="#home" class="white-text"><i class="material-icons">arrow_back</i></a> </span>
+	              <span class="col s9 left-align valign-wrapper"><b>Configuración</b>  </span>    
+	              <span class="col s2 right-align"></span>                      
+	            </div>
+        		<ul id ="listaConfi" class="collection">
+				    <li class="collection-item avatar">
+				      <i class="material-icons circle ">notification_important</i>
+				      <span class="title">Notificaciones de Post</span>
+				      <p>Recibir las notificaciones correspondientes<br>
+				      	a los nuevos post o publicacines 
+				       
+				      </p>
+				       <div class="switch secondary-content">
+					    <label>
+					      Off
+					      <input type="checkbox" id ="notificacionesPost">
+					      <span class="lever"></span>
+					      On
+					    </label>
+					  </div>
+				    </li>
+				    <li class="collection-item avatar">
+				      <i class="material-icons circle ">sms_failed</i>
+				      <span class="title">Notificaciones de Mensajes</span>
+				      <p>Recibir  notificaciones de mensajes <br>
+				      	que te envien atravez de la aplicación
+				       
+				      </p>
+				       <div class="switch secondary-content">
+					    <label>
+					      Off
+					      <input type="checkbox" id ="notificacionesMensajes">
+					      <span class="lever"></span>
+					      On
+					    </label>
+					  </div>
+				    </li>
+				  </ul>
+        	</div><!--fin de confi-->
 
           <!-- Pagina Login  -->
           <div id = "login" class="container center-align appPagina hide ">
@@ -92,7 +136,7 @@
 
                  <!-- fin formulario de registro -->
                   <div class="row">
-                    <button id ="loginConFacebook" class="waves-effect waves-light btn col s12 social facebook">
+                    <button id ="loginConFacebook" class=" loginConFacebook waves-effect waves-light btn col s12 social facebook">
                     <i class="fa fa-facebook"></i>Inicia sesión con Facebook</button>
                   </div>
                   <div class="row">
@@ -145,7 +189,7 @@
 
                  <!-- fin formulario de registro -->
                 <div class="row">
-                    <button id ="RegistrarConFacebook" class="waves-effect waves-light btn col s12 social facebook">
+                    <button id ="RegistrarConFacebook!" class=" loginConFacebook waves-effect waves-light btn col s12 social facebook">
                     <i class="fa fa-facebook"></i>Registro con Facebook</button>
               </div>
                 <div class="row">
@@ -379,7 +423,61 @@
               
             </div>
             
-          </div><!-- fin historias--->
+          </div><!-- fin historias -->
+          <!---********  ver historia ****  -->
+            <div id="verHistoria" class="appPagina hide  valign-wrapper ">
+              <div class="navbar-fixed navegacion-historia valign-wrapper row white-text">    
+                <span class="col s1 center-align  backHistorias"><i class="material-icons">arrow_back</i> </span>
+                <span class="col s9 left-align valign-wrapper"><img id ="hImagen"  src="" class="circle" width="35em" height="35em"/>&nbsp;<b id ="nombreHistoria">Nombre del Gil</b>  </span>    
+                <span class="col s2 right-align"></span>                      
+              </div>
+             
+                <div id="mostrarFotos" class="valign-wrapper">
+                </div>
+              
+            </div><!-- fin verHistoria-->
+
+
+            <!-- Reestablecer Contraseña -->
+            <div id ="recuperar" class="appPagina valign-wrapper hide">
+           
+              <div class="row">
+                   <div class="coll s6 offset-2">
+                     <h2 ><strong class="pink-text accent-2-text"><b>Lunytha</b></strong></h2>
+                  </div>
+                  <form  id = "recuperarCuenta" class="col s12">
+                   <h4>Recupera tu cuenta</h4>
+                   <p>Ingresa el correo electronico vinculado a tu cuenta </p>
+
+    
+                    <div class="row">
+                      <div class="input-field col s12">
+                        <input id="email_recuperar" type="email" class="validate" required>
+                        <label for="email_recuperar">Email</label>
+                      </div>
+                      <div class="input-field col s12">
+                        <button class="boton-login" ><h6>Recuperar</h6></button>                                                    
+                      </div>                                        
+                    </div>
+                    <div class="row">
+                       <div class="col s5" ><hr> </div>
+                       <div class="col s2" ><strong>O</strong></div>
+                       <div class="col s5" ><hr> </div>
+                    </div>
+                   </form>
+
+                   <!-- fin formulario de registro -->
+                    <div class="row">
+                      <button   class="loginConFacebook waves-effect waves-light btn col s12 social facebook">
+                      <i class="fa fa-facebook"></i>Inicia sesión con Facebook</button>
+                    </div>
+     
+              </div>   
+              
+            </div><!-- FIN contraseña-->
+      
+
+
     
            
 

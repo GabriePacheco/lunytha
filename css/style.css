@@ -16,6 +16,7 @@ body{
   font-family: 'Advent Pro', sans-serif;
 
 }
+
 .boton-login{
   background: none;
   color : #ff4081; 
@@ -298,11 +299,14 @@ body{
   margin-bottom: 5em !important; 
   
 }
+#conversacion{
+  overflow: hidden;
+ }
 
 #conversacionMensajes{
   margin-top:  4em;
-  height: 34.5em !important ;
-  max-height: 34.5em !important;
+  height: 80% !important ;
+  max-height: 80% !important;
   overflow-y:auto;
   overflow-x:hidden;
 
@@ -319,3 +323,27 @@ body{
 #historial{
    margin-top: 5em; 
 }
+
+#listaConfi{
+   margin-top: 5em; 
+}
+
+.navegacion-historia{
+  position: fixed !important;
+  top:0;
+  width: 100% !important;
+  margin-bottom: 5em !important;   
+}
+#verHistoria{
+  margin:0; 
+  padding:0; 
+  background-color: #000000 !important;
+  
+  
+}
+
+#mostrarFotos{
+  width: 100%;
+  height: 100% !important;
+}
+

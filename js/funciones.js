@@ -168,22 +168,26 @@ $("#registrar").submit(function (){
 $(document).ready(function(){
     $('.sidenav').sidenav();
     $('select').formSelect();
-      $('.fixed-action-btn').floatingActionButton();
+    $('.fixed-action-btn').floatingActionButton();
+    /*$("#app").height( $(window).height() );*/
+
  });
-
-
-
 	
 
 
 //5.- Función que controla la navegación de la APP
 function navegacion (paginaActiva){
+	
 	$(".appPagina").addClass("hide");
 	$("" + paginaActiva).removeClass("hide");
+	
+
 	if (paginaActiva != "#home" && paginaActiva != "configuracion" && paginaActiva != "#chat" ){
 		$("#nav").addClass("hide");
 	}else{
+
 		$("#nav").removeClass("hide");
+
 	}
 }
 
@@ -208,8 +212,7 @@ $("a").click(function (){
 });
 
 //6.- Ffija la barra de navegación cuando baja el scrol
-$(document).scroll(function (){
-	
+$(document).scroll(function (){	
 	if ($(document).scrollTop() >= 80  ){
 		$("#nav").addClass("navbar-fixed");
 		$(".nav-wrapper").addClass("hide");
@@ -219,11 +222,11 @@ $(document).scroll(function (){
 		$(".nav-wrapper").removeClass("hide");
 		
 	}
-
 });
 
 //7.-  Carga el perfil de usuario en menu PERFIL Y PARA LA APP
 function getPerfil(usuario){
+
 
 	$("#userId").val(usuario.uid);
   	$("#email_perfil").val(usuario.email);
@@ -290,6 +293,7 @@ function getPerfil(usuario){
  		}
 
 	});
+
 
 }	
 
@@ -400,7 +404,7 @@ $("#login").submit(function (){
 });
 
 //9.-  Login con facebook
-$("#loginConFacebook").click(function (){
+$(".loginConFacebook").click(function (){
 		var provider = new firebase.auth.FacebookAuthProvider();
 		provider.setCustomParameters({
 		  'display': 'popup'
@@ -1196,8 +1200,7 @@ function manejadorDeTokens (){
 		base.ref ('/tokens/' + token ).set({
 			token: token,
 			uid: userInLine.uid
-		})
-		
+		})	
 	})
 }
 
@@ -1276,8 +1279,7 @@ function abrirPost(postId){
 	navegacion("#verPost");
 }
 $("#toChat").click(function (){
-	bConversaciones();	
-	
+	bConversaciones();		
 });
 
 $("#ChatAddContacto").click(listarContactos);
@@ -1286,7 +1288,6 @@ function listarContactos(){
 	var listaUsuarios = base.ref().child("users");
 	listaUsuarios.once("value").then(function (listaU){
 		listaU.forEach(function(childListaU) {
-
 		 let contacto= childListaU.val()
 		 if (childListaU.key != userInLine.uid){
 			$("#listaUsuarios").append(`<li class="collection-item avatar" data-id="${childListaU.key}" onClick="abrirConversacion('${childListaU.key}', '${contacto.imagen}', '${contacto.nombre}')">
@@ -1298,10 +1299,10 @@ function listarContactos(){
 			    
 			    </li>`
 			    );
+
 		}
 	 });
 		
-	
 	});
 
 }
@@ -1309,9 +1310,10 @@ function listarContactos(){
 function abrirConversacion(chatId, imagen, nombre) {
 	$("#chatNombre").html(" &nbsp;" + nombre);
 	$("#chatImagen").attr("src", imagen);
-	$("#conversacionMensajes").html("");
+	$("#conversacion").height( $(window).height() );
+	$("#conversacionMensajes").html("");  
 	var conversacion=chatId;
-
+	$("#conversacionMensajes").attr("data-id", conversacion);	
 	var escucharConversacion = base.ref('chat/').child(userInLine.uid + "/" + conversacion).limitToLast(100);
 	escucharConversacion.on("child_added", function (mensajes){
 		dibujarMensaje(mensajes.val(), mensajes.key, chatId )
@@ -1319,7 +1321,7 @@ function abrirConversacion(chatId, imagen, nombre) {
 		escucharConversacion.on("child_changed", function (mensajes){
 		dibujarMensaje(mensajes.val(), mensajes.key, chatId )
 	})
-	$("#conversacionMensajes").attr("data-id", conversacion);	
+	
 	navegacion("#conversacion");
 }
 
@@ -1350,7 +1352,7 @@ function dibujarMensaje(objeto, clave, conversacion){
 	 			 HTMLestado +='<small><i class="material-icons grey-text darken-1"">done_all</i></small>'
 	 		break;
 	 		case 3: 
-	 			 HTMLestado +='<small><i class="material-icons text-green">done_all</i></small>'
+	 			 HTMLestado +='<small><i class="material-icons green-text">done_all</i></small>'
 	 		break;
 	 	} 	
 	 	clase_mensaje= "right-align mensajeEnviado";
@@ -1364,12 +1366,34 @@ function dibujarMensaje(objeto, clave, conversacion){
 					${HTMLestado}
 				</div>
 			</div>`;
+
 	 if ($("#" + clave).length > 0 ){
 		$("#" + clave).replaceWith(HTMLmensaje);
- 	 }else{		
-		$("#conversacionMensajes").append(HTMLmensaje);
+ 	 }else{
+
+ 	 	if( $("#conversacionMensajes").attr("data-id") === conversacion ){			
+ 	 		$('#conversacionMensajes').append(HTMLmensaje);	
+ 	 	}
+		
 	 }
 	 $("#conversacionMensajes").scrollTop($('#conversacionMensajes')[0].scrollHeight);
+
+	 if (mensaje.IdRecividor == userInLine.uid){
+	 	if( $("#conversacionMensajes").attr("data-id") === conversacion ){	
+		 	if (mensaje.estado == 2 ){
+		 		base.ref("chat/" +userInLine.uid+ "/" + mensaje.IdEnviador + "/" + clave ).update({
+		 			estado: 3
+		 		}).then(()=>{
+		 			
+		 			base.ref("chat/" + mensaje.IdEnviador + "/" +userInLine.uid+ "/"  + clave ).update({
+		 				estado: 3
+		 			})
+		 		})
+		 	}
+		 }
+	 	
+	 }
+
 
 }
 $("#enviarMensaje").click(enviador);
@@ -1403,27 +1427,42 @@ function enviador (){
 }
 $(".backChat").click(bConversaciones);
 	function bConversaciones(){
-
 	$("#listaConversaciones").html("");
 	$("#listaUsuarios").html("");	
+	$("#conversacionMensajes").attr("data-id", null);
 	var chatsAbiertos = base.ref("/chat/" + userInLine.uid).orderByKey();
 		chatsAbiertos.once("value").then(function (snap){
 			snap.forEach((conver) => {
-				base.ref().child("/users/" + conver.key).once("value")
-				.then(function (us){
+				base.ref().child("/users/" + conver.key).on("value", function (us){
 					$("#listaConversaciones").append(`
 					<li class="collection-item avatar" data-id="${us.key}" onClick="abrirConversacion('${us.key}', '${us.val().imagen}', '${us.val().nombre}')">
+					  <span id="converUser${conver.key}" data-badge-caption="new"></span>
 				      <img src="${us.val().imagen}" alt="${us.val().nombre}" class="circle">
 				      <span class="title">${us.val().nombre}</span>
 				      <p>
 				      	<small>${us.val().rol}</small>		         
-				      </p>
-				    
+				      </p>			    
 				    </li>
-						`);
+					`);
+				});
+				base.ref().child("/chat/" + userInLine.uid + "/" + conver.key).orderByChild("estado")
+				.equalTo(2).on('value', function (snap){
+					let count = 0;
+					snap.forEach((item) => {
+						if (item.val().IdRecividor == userInLine.uid ){
+					  		count += 1;
+					  	}
+					});
+					if (count > 0){
+						$("#converUser" + conver.key ).html(count);
+						$("#converUser" + conver.key ).addClass("new badge  pink accent-1");
+					}
+
+
 				});
 			})
 		});
+		
 	navegacion("#chat");
 }
 
@@ -1460,27 +1499,26 @@ function manejadorDeImagenesChat (e){
 		$("#mensaje").val("");
 		$("#mensaje").css({"height": "1em"});
 		var nuevoIdMensaje = base.ref().child('/chat/' + sendMensaje.IdRecividor + '/' +userInLine.uid ).push().key;
-		dibujarMensaje(sendMensaje, nuevoIdMensaje ,sendMensaje.conversacion );
+		dibujarMensaje(sendMensaje, nuevoIdMensaje , $("#conversacionMensajes").attr("data-id"));
 		sendMensaje.fecha = firebase.database.ServerValue.TIMESTAMP;
 		sendMensaje.estado = 1;
 		var updates = {};
 
-		console.log(archivo.name.split(".")[1]);	
 		var imagenMensaje = storage.ref("/imagenes/mensajes/" +  nuevoIdMensaje +"."+archivo.name.split(".")[1] )
 	.put(archivo);
 		imagenMensaje.on("state_changed", function (snapshot){
 			var progreso = (snapshot.bytesTransferred  / snapshot.totalBytes) * 100 ;
-			console.log(progreso);
+			
 			if ($("#prog").length > 0){
-			$("#prog").replaceWith(`<div id="prog" class="progress">
+			$("#prog").replaceWith(`<strong id="prog" class="progress">
 		      <div class="determinate" style="width: ${progreso}%"></div>
-		  		</div>`);
+		  		</strong>`);
 
 
 			}else{
-			$("#"+nuevoIdMensaje).append(`<div id="prog" class="progress">
+			$("#"+nuevoIdMensaje +" .left-align").prepend(`<strong id="prog" class="progress" width="100%">
 		      			<div class="determinate" style="width: ${progreso}%"></div>
-		  		</div>`);
+		  		</strong>`);
 			}
 
 		}, function (error){
@@ -1514,8 +1552,8 @@ function addHistoria(e){
 		historia.uNombre =userInLine.nombre;
 		historia.uImagen= userInLine.imagen;
 
-		var newHistoria = base.ref().child("/historias/" + userInLine.uid ).push().key;
-		var subirHistoria = storage.ref("/imagenes/historias/"+userInLine.uid+"/" + newHistoria+"."+archivo.name.split(".")[1] )
+		var newHistoria = base.ref().child("/historias/"  ).push().key;
+		var subirHistoria = storage.ref("/imagenes/historias/" + newHistoria+"."+archivo.name.split(".")[1] )
 		.put(archivo);
 
 		subirHistoria.on("state_changed", function (snapshot){
@@ -1528,7 +1566,7 @@ function addHistoria(e){
 		function (){
 			subirHistoria.snapshot.ref.getDownloadURL().then(function (downloadURL){
 				historia.imagen = downloadURL;
-				base.ref().child("/historias/" + userInLine.uid +"/"+newHistoria).update(historia)
+				base.ref().child("/historias/" + newHistoria).update(historia)
 				.then(()=> {
 					delete historia;
 				})
@@ -1544,5 +1582,97 @@ function addHistoria(e){
 }
 
 $("#toHistorias").click(function (){
+	$("#listaHistorias").html("");
+	var now = new Date();
+	var diaDeMes = now.getDate();
+	now.setDate(diaDeMes -1);
+	var hoy = Date.parse(now );
+	var fechaFiltro = Date.parse(now);
+
+	return firebase.database().ref("/historias/").orderByChild("fecha").startAt(fechaFiltro)
+		.once("value", function (snap) {
+		
+			snap.forEach((item) => {
+			  if (item.val().uid != userInLine.uid ){
+			  		base.ref("users/" + item.val().uid ).on("value", function (userHistoria){
+			  		var hora = new Date (item.val().fecha);
+			  		var ahora = new Date();
+			  		console.log(ahora - hora);
+			  		HTMLitem= `<li id="historia${item.val().uid}" class="collection-item avatar" onClick="verHistoria('${item.val().uid}','${item.val().uNombre}', '${item.val().uImagen}')">
+								      <img src="${userHistoria.val().imagen}" alt="${userHistoria.val().nombre}" class="circle">
+								      <span class="title">${userHistoria.val().nombre}</span>
+								      <p>${hora.getHours()}:${hora.getMinutes()}<br>								       
+								      </p>								
+								    </li>`;			  			
+						if( $("#historia" + item.val().uid).length > 0 ){
+								$("#historia" + item.val().uid).replaceAll(HTMLitem);
+
+						}else{
+							$("#listaHistorias").append(HTMLitem);
+						}
+			  		});
+			  }
+			});
+		});
+
+
 
 });
+function verHistoria(id, nombre, imagen){
+
+	$("#verHistoria").height( $(window).height() );
+	$("#hImagen").attr("src",imagen);
+	$("#nombreHistoria").html(nombre);
+	var now = new Date();
+	var diaDeMes = now.getDate();
+	now.setDate(diaDeMes -1);
+	var fechaFiltro = Date.parse(now);
+	var consultaHistorias = base.ref("historias/").orderByChild("uid").equalTo(id);
+	consultaHistorias.once("value", function (snap){
+		console.log(snap.val());
+		snap.forEach((item) => {
+			$("#mostrarFotos").append(`<img  src="${item.val().imagen}"  class="responsive-img hide" />`);			
+		});
+
+	}).then(()=>{
+		animarHistorias("#mostrarFotos");
+	})
+
+	$('.carousel.carousel-slider ').carousel({fullWidth: true, indicators: true});
+	navegacion("#verHistoria");
+}
+function animarHistorias(contenedor){
+	
+	var indice = 0
+	var totlaIndice = $(contenedor+" img").length;
+	var objeto = $(contenedor+" img")[indice];
+	objeto.className = "responsive-img  active";
+	var intervalo = setInterval(() => {
+		console.log(indice);
+		indice += 1;
+		if(indice < totlaIndice ){
+			objeto.className="hide";
+		
+			objeto = $(contenedor+" img")[indice];
+			objeto.className = "responsive-img  active";
+		}else{
+			$("#mostrarFotos img").addClass("hide") ;
+			window.clearInterval(intervalo);
+			$("#toHistorias").click();
+		}
+	},3000)
+}
+
+$(".backHistorias").click(()=>{ $("#toHistorias").click() ;});
+
+$("#recuperar").submit(function (){
+	var auth = firebase.auth();
+	var emailAddress = $("#email_recuperar").val();
+	console.log(emailAddress)
+
+	auth.sendPasswordResetEmail(emailAddress).then(function(snap) {
+	  alert("Enviamos un correo conidicaciones para reestablecer tu contraseña. " )
+	}).catch(function(error) {
+	  	alert(error.message);
+	});
+})
