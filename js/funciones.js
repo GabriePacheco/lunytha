@@ -60,10 +60,10 @@ function conexion (){
 	   $(".noConectado").remove();
 	  } else {
 	   if ($(".publicando").length > 0){
-	   	$(".publicando").prepend("<i class='nConectado'>esperando por conxion a internet...</i>");
+	   	$(".publicando").prepend("<i class='nConectado'>esperando por conexión  a Internet...</i>");
 
 	   }else{
-	   	$("#publicaciones").prepend("<i class='noConectado'>sin conexion a intenet..</i>");
+	   	$("#publicaciones").prepend("<i class='noConectado'>esperando conexión a Internet....</i>");
 	  }
 	  }
 	});
@@ -112,7 +112,7 @@ Auth.onAuthStateChanged(function(user) {
   		messaging1.onMessage(function(playload) {
   		let notificacion = playload.notification; 
   		reproducirSonido();	
-		 M.toast({html: '<span> '+ notificacion.title +'  creado un nuevo post  <i class="material-icons blue-text">info</i></span>'  });
+		 M.toast({html: '<span> '+ notificacion.title +' '+notificacion.body  });
 		});
   	}else{
   		 base.ref('/users/' + user.uid).set({
@@ -153,7 +153,7 @@ $("#registrar").submit(function (){
 		})
 		.catch(function(error) {
 		if (error.code == "auth/email-already-in-use"){
-			M.toast({html: '<span>El Email ingresado ya esta registrado <i class="material-icons red-text">error</i></span>'  });
+			M.toast({html: '<span>El E-mail ingresado ya esta registrado <i class="material-icons red-text">error</i></span>'  });
 		}
 		
 		});
@@ -228,6 +228,48 @@ $(document).scroll(function (){
 function getPerfil(usuario){
 
 
+	//Carga las conversaciones Abiertas
+	var chatsAbiertos = base.ref("/chat/" + userInLine.uid).orderByKey();
+	chatsAbiertos.on("value", function (snap){
+
+		snap.forEach((conver) => {
+			base.ref().child("/users/" + conver.key).on("value", function (us){
+				var HTMLlistaConversacionItem= `
+				<li id ="itemConversacion${us.key}"  class="collection-item avatar" data-id="${us.key}" onClick="abrirConversacion('${us.key}', '${us.val().imagen}', '${us.val().nombre}')">
+				  <span id="converUser${conver.key}" data-badge-caption="new"></span>
+			      <img src="${us.val().imagen}" alt="${us.val().nombre}" class="circle">
+			      <span class="title">${us.val().nombre}</span>
+			      <p>
+			      	<small>${us.val().rol}</small>		         
+			      </p>			    
+			    </li>
+			    `;
+			    if ( $("#itemConversacion"+ us.key).length > 0){
+			    		 $("#itemConversacion"+ us.key).replaceWith(HTMLlistaConversacionItem);
+			    }else{
+			    	$("#listaConversaciones").append(HTMLlistaConversacionItem);	
+			    }
+				
+			});
+			base.ref().child("/chat/" + userInLine.uid + "/" + conver.key).orderByChild("estado")
+			.equalTo(2).on('value', function (snap){
+				let count = 0;
+				snap.forEach((item) => {
+					if (item.val().IdRecividor == userInLine.uid ){
+				  		count += 1;
+				  	}
+				});
+				if (count > 0){
+					$("#converUser" + conver.key ).html(count);
+					$("#converUser" + conver.key ).addClass("new badge  pink accent-1");
+				}
+
+
+			});
+		})
+	});
+
+
 	$("#userId").val(usuario.uid);
   	$("#email_perfil").val(usuario.email);
 	$("#nombre_perfil").val(usuario.displayName);
@@ -262,7 +304,7 @@ function getPerfil(usuario){
 	var userId = firebase.auth().currentUser.uid;
 	return firebase.database().ref('/users/' + userId).once('value').then(function(snapshot) {
 	  var rol = (snapshot.val() && snapshot.val().rol) || 'Anonymous';
-	 	if(rol== "representante"){
+	 	if(rol == "representante"){
 			$(".padre").removeClass("hide");
 			$("#telefono").attr("required", true);
 			$("#estudiante").attr("required", true);
@@ -293,6 +335,7 @@ function getPerfil(usuario){
  		}
 
 	});
+	
 
 
 }	
@@ -834,7 +877,7 @@ function calcularFecha (fechas){
 	let horas = dif / (1000 * 60 * 60  );
 	let minutos = dif / (1000 * 60  );
 	var mostrar = "Justo ahora";
-
+	let meses = ['En', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
 	if(dias < 1 && horas < 1 && minutos >= 1){
 		mostrar = "hace " +  Math.floor(minutos) + " minutos";
@@ -848,7 +891,7 @@ function calcularFecha (fechas){
 	}
 
 	if(dias > 1){
-		mostrar =  fecha.getDate()+"/"+ fecha.getMonth() +" a las " + fecha.getHours() + ":" + fecha.getMinutes();
+		mostrar =  fecha.getDate()+" de "+ meses[fecha.getMonth()] +" a las " + fecha.getHours() + ":" + fecha.getMinutes();
 	}
 
 	if(dias < 1 && horas < 1 && minutos < 1  && minutos > 0){
@@ -1010,11 +1053,11 @@ function quitar(arreglo, valor, data){
 }
 
 $("#epostSend").click(async function (e){
-
 	ePosts.texto = $("#epostText").val();
-	$("#" + $("#editar").attr('data-id')  ).prepend(` <div class="progress  #ff80ab pink accent-1">
-      <div class="indeterminate  #ff80ab pink accent-2"></div>
-  </div>`);
+	$("#" + $("#editar").attr('data-id')  ).prepend(`
+		<div class="progress  #ff80ab pink accent-1">
+    		  <div class="indeterminate  #ff80ab pink accent-2"></div>
+	   	</div>`);
 	
 	if (nimagen || nimagen.length > 0){
 		if (!ePosts.imagenes){
@@ -1324,15 +1367,35 @@ function abrirConversacion(chatId, imagen, nombre) {
 	
 	navegacion("#conversacion");
 }
+function calcularFechaMensaje(fecha){
+	let meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+	let ahora = new Date().getTime();
+	let laFecha = new Date (fecha).getTime();
+	var diff = (ahora - laFecha)/(1000*60*60*24);
+	if (diff < 1){
+		return "Hoy";
+	}
+	if (diff >= 1 && diff < 2){
+		return "Ayer";
+	}
+	return fecha.getDate() + " de " +meses[fecha.getMonth()] +  " de " + fecha.getFullYear();
+
+
+}
 
 function dibujarMensaje(objeto, clave, conversacion){
 	var mensaje = objeto;
  	var fecha = new Date(mensaje.fecha);
-
  	var HTMLestado='';
  	var HTMLtexto ='';
  	var HTMLImagen='';
  	var clase_mensaje=' mensajeRecivido';
+ 	var ultimaFecha =  $(".ultimaFecha").attr('data-fecha');
+ 	var mensajeFecha = new Date(fecha.getFullYear(), fecha.getMonth(),fecha.getDate() );
+ 	if (new Date(ultimaFecha) < mensajeFecha || ultimaFecha == undefined ){
+		$(".ultimaFecha").removeClass("ultimaFecha");
+		$('#conversacionMensajes').append("<div class='fechaMensaje ultimaFecha center-align ' data-fecha='"+mensajeFecha+"'><span>"+ calcularFechaMensaje(mensajeFecha)  +"</span></div>");	
+	}
  	if (mensaje.texto){
  		HTMLtexto = mensaje.texto;
  	}
@@ -1349,10 +1412,10 @@ function dibujarMensaje(objeto, clave, conversacion){
 	 			 HTMLestado +='<small><i class="material-icons grey-text darken-1"">done</i></small>'
 	 		break;
 	 		case 2: 
-	 			 HTMLestado +='<small><i class="material-icons grey-text darken-1"">done_all</i></small>'
+	 			 HTMLestado +='<small><i class="material-icons padding: 0.5em;"">done_all</i></small>'
 	 		break;
 	 		case 3: 
-	 			 HTMLestado +='<small><i class="material-icons green-text">done_all</i></small>'
+	 			 HTMLestado +='<small><i class="material-icons teal-text lighten-3">done_all</i></small>'
 	 		break;
 	 	} 	
 	 	clase_mensaje= "right-align mensajeEnviado";
@@ -1427,42 +1490,8 @@ function enviador (){
 }
 $(".backChat").click(bConversaciones);
 	function bConversaciones(){
-	$("#listaConversaciones").html("");
 	$("#listaUsuarios").html("");	
 	$("#conversacionMensajes").attr("data-id", null);
-	var chatsAbiertos = base.ref("/chat/" + userInLine.uid).orderByKey();
-		chatsAbiertos.once("value").then(function (snap){
-			snap.forEach((conver) => {
-				base.ref().child("/users/" + conver.key).on("value", function (us){
-					$("#listaConversaciones").append(`
-					<li class="collection-item avatar" data-id="${us.key}" onClick="abrirConversacion('${us.key}', '${us.val().imagen}', '${us.val().nombre}')">
-					  <span id="converUser${conver.key}" data-badge-caption="new"></span>
-				      <img src="${us.val().imagen}" alt="${us.val().nombre}" class="circle">
-				      <span class="title">${us.val().nombre}</span>
-				      <p>
-				      	<small>${us.val().rol}</small>		         
-				      </p>			    
-				    </li>
-					`);
-				});
-				base.ref().child("/chat/" + userInLine.uid + "/" + conver.key).orderByChild("estado")
-				.equalTo(2).on('value', function (snap){
-					let count = 0;
-					snap.forEach((item) => {
-						if (item.val().IdRecividor == userInLine.uid ){
-					  		count += 1;
-					  	}
-					});
-					if (count > 0){
-						$("#converUser" + conver.key ).html(count);
-						$("#converUser" + conver.key ).addClass("new badge  pink accent-1");
-					}
-
-
-				});
-			})
-		});
-		
 	navegacion("#chat");
 }
 
@@ -1508,10 +1537,10 @@ function manejadorDeImagenesChat (e){
 	.put(archivo);
 		imagenMensaje.on("state_changed", function (snapshot){
 			var progreso = (snapshot.bytesTransferred  / snapshot.totalBytes) * 100 ;
-			
+			console.log(progreso)
 			if ($("#prog").length > 0){
 			$("#prog").replaceWith(`<strong id="prog" class="progress">
-		      <div class="determinate" style="width: ${progreso}%"></div>
+		      	<div class="determinate" style="width: ${progreso}%"></div>
 		  		</strong>`);
 
 
@@ -1671,7 +1700,7 @@ $("#recuperar").submit(function (){
 	console.log(emailAddress)
 
 	auth.sendPasswordResetEmail(emailAddress).then(function(snap) {
-	  alert("Enviamos un correo conidicaciones para reestablecer tu contraseña. " )
+	  alert("Enviamos un correo con indicaciones para restablecer tu contraseña. " )
 	}).catch(function(error) {
 	  	alert(error.message);
 	});
